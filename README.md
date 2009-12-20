@@ -7,7 +7,7 @@ It requires [node.js](http://nodejs.org).
 
 For now it exposes one simple function, `getFileTags( path )`
 
-== Build
+## Build
 
     # make sure you have node and taglib installed
     # checkout repository
