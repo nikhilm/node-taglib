@@ -1,19 +1,8 @@
 /*
- * =====================================================================================
- *
- *       Filename:  taglib.cc
- *
- *    Description:  Javascript bindings to the taglib library ( http://developer.kde.org/~wheeler/taglib.html )
- *
- *        Version:  0.1
- *        Created:  12/17/2009 04:00:34 PM
- *
- *         Author:  Nikhil Marathe (nsm.nikhil@gmail.com), 
- *
- * =====================================================================================
+ * Copyright (C) 2009 Nikhil Marathe ( nsm.nikhil@gmail.com )
+ * This file is distributed under the MIT License. Please see
+ * LICENSE for details
  */
-
-#include <string.h>
 #include <iostream>
 
 #include <v8.h>
@@ -80,8 +69,4 @@ init (Handle<Object> target)
     t->InstanceTemplate()->SetInternalFieldCount(1);
 
     NODE_SET_METHOD( target, "getFileTags", GetFileTags );
-
-    //NODE_SET_PROTOTYPE_METHOD( t, "boing", Boing );
-    //target->Set( String::NewSymbol("Ping"), t->GetFunction() );
-    //target->Set( String::New("Hello"), String::New("World") );
 }
