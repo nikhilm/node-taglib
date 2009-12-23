@@ -1,4 +1,6 @@
-from os import popen
+import Options
+from os import popen, unlink, symlink
+from os.path import exists
 
 srcdir = "."
 blddir = "build"
@@ -25,3 +27,12 @@ def build(bld):
   obj.target = "taglib"
   obj.source = "taglib.cc"
   obj.uselib = "TAGLIB"
+
+def shutdown():
+  # HACK to get binding.node out of build directory.
+  # better way to do this?
+  if Options.commands['clean']:
+    if exists('taglib.node'): unlink('taglib.node')
+  else:
+    if exists('build/default/taglib.node') and not exists('taglib.node'):
+      symlink('build/default/taglib.node', 'taglib.node')
