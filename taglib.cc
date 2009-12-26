@@ -26,7 +26,7 @@ static Persistent<FunctionTemplate> tag_constructor_template;
 Handle<Value> GetFileTags(const Arguments& args)
 {
     if (args.Length() < 1 || !args[0]->IsString())
-        return ThrowException(String::New("Expected string 'path' as first argument"));
+        return ThrowException(Exception::TypeError(String::New("Expected string 'path' as first argument")));
 
     String::AsciiValue path(args[0]->ToString());
     TagLib::FileRef f(*path);
@@ -36,7 +36,7 @@ Handle<Value> GetFileTags(const Arguments& args)
         std::string err = "Error while reading data from ";
         String::Utf8Value val(args[0]->ToString());
         err = err + std::string(*val);
-        return ThrowException( String::New( err.c_str(), err.length() ) );
+        return ThrowException( Exception::Error(String::New( err.c_str(), err.length() ) ) );
     }
 
     TagLib::Tag *tag = f.tag();
