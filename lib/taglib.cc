@@ -16,8 +16,7 @@ using namespace v8;
 using namespace node;
 
 Local<String> TagLibStringToString( TagLib::String s )
-{
-    std::string str = s.to8Bit();
+{ std::string str = s.to8Bit();
     return String::New( str.c_str(), str.length() );
 }
 
@@ -68,5 +67,5 @@ init (Handle<Object> target)
     Local<FunctionTemplate> t = FunctionTemplate::New();
     t->InstanceTemplate()->SetInternalFieldCount(1);
 
-    NODE_SET_METHOD( target, "getFileTags", GetFileTags );
+    NODE_SET_METHOD( target, "info", GetFileInfo );
 }
