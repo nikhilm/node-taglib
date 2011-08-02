@@ -1,3 +1,3 @@
 cLib = require __dirname + "/module"
 
-exports.parse = cLib.getFileTags
+exports.Tag = cLib.Tag

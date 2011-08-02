@@ -1,5 +1,5 @@
-var taglib = require(__dirname+"/../lib/taglib")
+var Taglib = require(__dirname+"/../lib/taglib")
 var sys = require("sys")
 
-var p = taglib.parse(process.ARGV[2]);
+var p = new Taglib.Tag(process.ARGV[2]);
 sys.debug( sys.inspect(p) )

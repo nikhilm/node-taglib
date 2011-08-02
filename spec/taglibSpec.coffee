@@ -3,9 +3,7 @@ vows = require 'vows'
 fs = require 'fs'
 Taglib = require __dirname + '/../lib/taglib'
 
-vows.describe('taglib bindings')#.addBatch
-#  'parsing tags from given file':
-#    topic: Taglib.parse(__dirname+'/sample.mp3')
+vows.describe('taglib bindings')
 .addBatch
   'reading Tags from File':
     topic: new Taglib.Tag(__dirname+'/sample.mp3')
