@@ -5,7 +5,7 @@ node-taglib is ( currently ) a simple binding to [TagLib](http://developer.kde.o
 
 It requires [node.js](http://nodejs.org).
 
-For now it exposes one simple function, `getFileTags( path )`
+For now it exposes one simple function, `parse( path )`
 
 ## Build
 
@@ -13,8 +13,8 @@ For now it exposes one simple function, `getFileTags( path )`
     # checkout repository
     cd node-taglib
     node-waf configure build
-    node example.js /path/to/mp3_or_ogg_file
+    node examples/simple.js /path/to/mp3_or_ogg_file
 
-Just view the 4-line example.js to see how what you get back.
+Just view the 4-line `examples/simple.js` to see how and what you get back.
 
 Right now it doesn't fail with very nice errors since I haven't figured out node and v8 that well.
