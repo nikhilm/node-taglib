@@ -5,7 +5,16 @@ node-taglib is ( currently ) a simple binding to [TagLib](http://developer.kde.o
 
 It requires [node.js](http://nodejs.org).
 
-For now it exposes one simple function, `parse( path )`
+For now it exposes one simple class,
+
+use it like this
+
+    var Tag = require('taglib').Tag;
+    var t = new Tag( path );
+    t.title # => "Another one bites the dust"
+    t.artist # => "Kween"
+    t.artist = "Queen"
+    t.save() # => true
 
 ## Build
 
