@@ -1,2 +1,4 @@
 build/
 lib/module.node
+spec/sample-write.mp3
+.lock-wscript
