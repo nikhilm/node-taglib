@@ -27,3 +27,9 @@ use it like this
 Just view the 4-line `examples/simple.js` to see how and what you get back.
 
 Right now it doesn't fail with very nice errors since I haven't figured out node and v8 that well.
+
+Credits
+-------
+
+Original author - Nikhil Marathe <nsm.nikhil@gmail.com>
+Write support, coffee-script conversion, package.json - Lennart Melzer (https://github.com/lennart)
