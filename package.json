@@ -1,0 +1,23 @@
+{
+  "name": "taglib",
+  "description": "Simple bindings to the taglib",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/lennart/node-taglib.git"
+  },
+  "author": "Nikhil Marathe <nsm.nikhil@gmail.com> (http://kodeclutz.blogspot.com/)",
+  "main": "lib/taglib.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {
+    "vows" : ">= 0.5.9"
+  },
+  "scripts": {
+    "test": "vows"
+  },
+  "engines": {
+    "node": "*"
+  }
+}
