@@ -16,6 +16,7 @@ void Tag::Initialize(Handle<Object> target)
     pft->SetClassName(String::NewSymbol("Tag"));
 
     NODE_SET_PROTOTYPE_METHOD(t, "save", SaveTag);
+    NODE_SET_PROTOTYPE_METHOD(t, "isEmpty", IsEmpty);
 
     pft->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
     pft->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
@@ -103,6 +104,12 @@ void Tag::SetGenre(Local<String> property, Local<Value> value, const AccessorInf
   unwrapTag(info)->tag->setGenre(NodeStringToTagLibString(value));
 }
 
+Handle<Value> Tag::IsEmpty(const Arguments &args) {
+  HandleScope scope;
+  Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+  return Boolean::New(t->tag->isEmpty());
+}
+
 Handle<Value> Tag::SaveTag(const Arguments &args) {
   HandleScope scope;
   Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
@@ -135,16 +142,26 @@ Handle<Value> Tag::New(const Arguments &args) {
     return args.This();
 }
 
-Local<String> Tag::TagLibStringToString( TagLib::String s )
+Handle<Value> Tag::TagLibStringToString( TagLib::String s )
 {
-  TagLib::ByteVector str = s.data(TagLib::String::UTF16);
-  // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
-  // Byte Order Mark
-  return String::New((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
+  if(s.isEmpty()) {
+    return Null();
+  }
+  else {
+    TagLib::ByteVector str = s.data(TagLib::String::UTF16);
+    // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
+    // Byte Order Mark
+    return String::New((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
+  }
 }
 
 TagLib::String Tag::NodeStringToTagLibString( Local<Value> s )
 {
-  String::Utf8Value str(s->ToString());
-  return TagLib::String(*str, TagLib::String::UTF8);
+  if(s->IsNull()) {
+    return TagLib::String::null;
+  }
+  else {
+    String::Utf8Value str(s->ToString());
+    return TagLib::String(*str, TagLib::String::UTF8);
+  }
 }
