@@ -5,6 +5,10 @@ Taglib = require __dirname + '/../lib/taglib'
 
 vows.describe('taglib bindings')
 .addBatch
+  'opening UTF-8 Path':
+    topic: new Taglib.Tag(__dirname+'/sample-with-ütf.mp3')
+    'should be a `Tag`': (tag) ->
+      assert.equal Taglib.Tag, tag.constructor
   'reading Tags from File':
     topic: new Taglib.Tag(__dirname+'/sample.mp3')
     'should be a `Tag`': (tag) ->
