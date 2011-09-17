@@ -104,7 +104,7 @@ Handle<Value> Tag::New(const Arguments &args) {
     if (args.Length() < 1 || !args[0]->IsString())
         return ThrowException(String::New("Expected string 'path' as first argument"));
 
-    String::AsciiValue path(args[0]->ToString());
+    String::Utf8Value path(args[0]->ToString());
 
     TagLib::FileRef * f = new TagLib::FileRef(*path);
     if ( f->isNull() || !f->tag() )
