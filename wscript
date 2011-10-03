@@ -24,7 +24,7 @@ def build(bld):
   bld.add_post_fun(post_build)
   obj = bld.new_task_gen("cxx", "shlib", "node_addon")
   obj.target = "taglib_binding"
-  obj.source = "src/tag.cc src/taglib.cc"
+  obj.source = "src/audioproperties.cc src/tag.cc src/taglib.cc"
   obj.uselib = "TAGLIB"
 
 def shutdown():
