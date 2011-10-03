@@ -1,4 +1,4 @@
 build/
-lib/module.node
+lib/taglib_binding.node
 spec/sample-write.mp3
 .lock-wscript
