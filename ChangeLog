@@ -1,0 +1,5 @@
+0.2.0
+-----
+
+* Add support for Unicode filenames (Thanks to Jacob Evans <jacob@dekz.net>)
+* Add write support (Thanks to Lennart Melzer <me@lmaa.name>)

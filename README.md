@@ -32,4 +32,5 @@ Credits
 -------
 
 Original author - Nikhil Marathe <nsm.nikhil@gmail.com>
-Write support, coffee-script conversion, package.json - Lennart Melzer (https://github.com/lennart)
+Write support, original package.json - Lennart Melzer (https://github.com/lennart)
+Utf8 filename support - Jacob Evans (https://github.com/dekz)

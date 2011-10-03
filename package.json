@@ -1,13 +1,13 @@
 {
   "name": "taglib",
   "description": "Simple bindings to TagLib",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/nikhilm/node-taglib.git"
   },
   "author": "Nikhil Marathe <nsm.nikhil@gmail.com> (http://kodeclutz.blogspot.com/)",
-  "contributors": [ "Lennart Melzer (https://github.com/lennart)" ],
+  "contributors": [ "Lennart Melzer (https://github.com/lennart)", "Jacob Evans <jacob@dekz.net>" ],
   "main": "lib/taglib.js",
   "directories": {
     "lib": "lib"
