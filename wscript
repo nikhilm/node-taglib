@@ -18,13 +18,13 @@ def configure(conf):
   uselib_store='TAGLIB')
 
 def post_build(ctx):
-  if not os.path.exists('lib/module.node'):
-      os.symlink( '../build/default/module.node', 'lib/module.node')
+  if not os.path.exists('lib/taglib_binding.node'):
+      os.symlink( '../build/Release/taglib_binding.node', 'lib/taglib_binding.node')
 
 def build(bld):
   bld.add_post_fun(post_build)
   obj = bld.new_task_gen("cxx", "shlib", "node_addon")
-  obj.target = "module"
+  obj.target = "taglib_binding"
   obj.source = "src/tag.cc src/taglib.cc"
   obj.uselib = "TAGLIB"
 
@@ -32,8 +32,8 @@ def shutdown():
   # HACK to get binding.node out of build directory.
   # better way to do this?
   if Options.commands['clean']:
-    if exists('lib/module.node'): unlink('lib/module.node')
+    if exists('lib/taglib_binding.node'): unlink('lib/taglib_binding.node')
   else:
-    if exists('build/default/lib/module.node') and not exists('lib/module.node'):
-      symlink('build/default/lib/module.node', 'lib/module.node')
+    if exists('build/Release/lib/taglib_binding.node') and not exists('lib/taglib_binding.node'):
+      symlink('build/Release/lib/taglib_binding.node', 'lib/taglib_binding.node')
 # vim: ft=python sw=2
