@@ -28,6 +28,9 @@ vows.describe('taglib bindings')
     'should be from 2011': function (tag) {
       assert.equal(2011, tag.year);
     },
+    'should have a silly comment': function(tag) {
+      assert.equal("Salami Wiglet.", tag.comment);
+    }
   },
 
   'writing Tags to File': {
