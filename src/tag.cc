@@ -19,6 +19,7 @@ void Tag::Initialize(Handle<Object> target)
 
     pft->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
     pft->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
+    pft->InstanceTemplate()->SetAccessor(String::New("comment"), GetComment, SetComment);
     pft->InstanceTemplate()->SetAccessor(String::New("artist"), GetArtist, SetArtist);
     pft->InstanceTemplate()->SetAccessor(String::New("track"), GetTrack, SetTrack);
     pft->InstanceTemplate()->SetAccessor(String::New("year"), GetYear, SetYear);
@@ -60,6 +61,16 @@ Handle<Value> Tag::GetAlbum(Local<String> property, const AccessorInfo& info) {
 void Tag::SetAlbum(Local<String> property, Local<Value> value, const AccessorInfo& info) {
   HandleScope scope;
   unwrapTag(info)->tag->setAlbum(NodeStringToTagLibString(value));
+}
+
+Handle<Value> Tag::GetComment(Local<String> property, const AccessorInfo& info) {
+  HandleScope scope;
+  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->comment()));
+}
+
+void Tag::SetComment(Local<String> property, Local<Value> value, const AccessorInfo& info) {
+  HandleScope scope;
+  unwrapTag(info)->tag->setComment(NodeStringToTagLibString(value));
 }
 
 Handle<Value> Tag::GetTrack(Local<String> property, const AccessorInfo& info) {
