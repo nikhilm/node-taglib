@@ -5,3 +5,4 @@
 * Add write support (Thanks to Lennart Melzer <me@lmaa.name>)
 * Added AudioProperties support
 * Add Tag::comment accessor (Thanks to Andrew Clunis <andrew@orospakr.ca>)
+* Use WAF environment to get build path and add 'clean' target. (issue #11)

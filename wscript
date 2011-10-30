@@ -17,8 +17,9 @@ def configure(conf):
   uselib_store='TAGLIB')
 
 def post_build(ctx):
+  base_path = ctx.srcnode.abspath(ctx.get_env())
   if not os.path.exists('lib/taglib_binding.node'):
-      os.symlink( '../build/Release/taglib_binding.node', 'lib/taglib_binding.node')
+      os.symlink(os.path.join(base_path, 'taglib_binding.node'), 'lib/taglib_binding.node')
 
 def build(bld):
   bld.add_post_fun(post_build)
@@ -27,12 +28,6 @@ def build(bld):
   obj.source = "src/audioproperties.cc src/tag.cc src/taglib.cc"
   obj.uselib = "TAGLIB"
 
-def shutdown():
-  # HACK to get binding.node out of build directory.
-  # better way to do this?
-  if Options.commands['clean']:
-    if exists('lib/taglib_binding.node'): unlink('lib/taglib_binding.node')
-  else:
-    if exists('build/Release/lib/taglib_binding.node') and not exists('lib/taglib_binding.node'):
-      symlink('build/Release/lib/taglib_binding.node', 'lib/taglib_binding.node')
-# vim: ft=python sw=2
+def clean(ctx):
+  if os.path.exists('lib/taglib_binding.node'):
+    os.unlink('lib/taglib_binding.node')
