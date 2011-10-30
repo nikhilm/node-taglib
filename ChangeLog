@@ -4,3 +4,4 @@
 * Add support for Unicode filenames (Thanks to Jacob Evans <jacob@dekz.net>)
 * Add write support (Thanks to Lennart Melzer <me@lmaa.name>)
 * Added AudioProperties support
+* Add Tag::comment accessor (Thanks to Andrew Clunis <andrew@orospakr.ca>)
