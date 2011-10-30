@@ -1,3 +1,8 @@
+2011.10.30, v0.2.1
+
+* Lowercase process.ARGV in examples/properties.js to work with node v0.5.10
+  onwards.
+
 2011.10.30, v0.2.0
 
 * Add support for Unicode filenames (Thanks to Jacob Evans <jacob@dekz.net>)
