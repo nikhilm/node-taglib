@@ -56,12 +56,16 @@ Handle<Value> AudioProperties::New(const Arguments &args) {
 
     String::Utf8Value path(args[0]->ToString());
 
+    if (!TagLib::File::isReadable(*path)) {
+        std::string err = "File " + std::string(*path) + " is not readable";
+        return ThrowException(String::New(err.c_str(), err.length()));
+    }
+
     TagLib::FileRef * f = new TagLib::FileRef(*path);
     if ( f->isNull() || !f->audioProperties() )
     {
-        std::string err = "Error while reading data from ";
-        err = err + std::string(*path);
-        return ThrowException( String::New( err.c_str(), err.length() ) );
+        std::string err = "Failed to extract audio properties from " + std::string(*path);
+        return ThrowException(String::New(err.c_str(),err.length()));
     }
 
     AudioProperties * properties = new AudioProperties(f);

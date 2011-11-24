@@ -59,6 +59,30 @@ vows.describe('taglib bindings')
     }
   },
 
+  'reading AudioProperties from non-existent file': {
+    topic: function() {
+        return function() {
+          return new Taglib.AudioProperties('thisfileobviouslyshouldnot.exist');
+        }
+    },
+
+    'should throw an exception': function(topic) {
+        assert.throws(topic, /readable/);
+    }
+  },
+
+  'reading AudioProperties from a non-audio file': {
+    topic: function() {
+        return function() {
+          return new Taglib.AudioProperties(__filename);
+        }
+    },
+
+    'should throw an exception': function(topic) {
+        assert.throws(topic, /extract audio properties/);
+    }
+  },
+
   'writing Tags to File': {
     topic: function() {
       var filename = __dirname+'/sample-write.mp3';
