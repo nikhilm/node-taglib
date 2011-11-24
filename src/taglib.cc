@@ -3,14 +3,7 @@
  * This file is distributed under the MIT License. Please see
  * LICENSE for details
  */
-#include <iostream>
-
 #include <v8.h>
-#include <node.h>
-#include <assert.h>
-
-#include <fileref.h>
-#include <tag.h>
 
 #include "audioproperties.h"
 #include "tag.h"
