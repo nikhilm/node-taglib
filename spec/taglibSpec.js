@@ -1,10 +1,17 @@
-var assert = require('assert')
-var vows = require('vows')
-var fs = require('fs')
-var Taglib = require(__dirname + '/../lib/taglib')
+var assert = require('assert'),
+    vows = require('vows'),
+    fs = require('fs'),
+    Taglib = require(__dirname + '/../lib/taglib');
 
 vows.describe('taglib bindings')
 .addBatch({
+  'opening UTF-8 Path': {
+    topic: new Taglib.Tag(__dirname + '/sample-with-ütf.mp3'),
+    'should be a `Tag`': function(tag) {
+      assert.equal(Taglib.Tag, tag.constructor);
+    }
+  },
+
   'ASF support yes/no should be defined': {
     topic: Taglib.WITH_ASF,
     'is boolean': function(topic) {
@@ -109,6 +116,29 @@ vows.describe('taglib bindings')
     'should have written `Something completely different…` to title': function (filename) {
       var tag = new Taglib.Tag(filename);
       assert.equal("Something completely different…", tag.title);
+    }
+  },
+
+  'stripping Tags from File': {
+    topic: function() {
+      var filename, t;
+      filename = __dirname + '/sample-clean.mp3';
+      fs.writeFileSync(filename, fs.readFileSync(__dirname + '/sample.mp3'));
+      t = new Taglib.Tag(filename);
+      t.title = null;
+      t.artist = null;
+      t.album = null;
+      t.genre = null;
+      t.year = null;
+      t.comment = null;
+      t.track = null;
+      t.save();
+      return filename;
+    },
+    'should result in a Tag that `isEmpty`': function(filename) {
+      var tag;
+      tag = new Taglib.Tag(filename);
+      assert.ok(tag.isEmpty());
     }
   },
 
