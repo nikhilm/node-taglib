@@ -18,16 +18,16 @@ def configure(conf):
 
 def post_build(ctx):
   base_path = ctx.srcnode.abspath(ctx.get_env())
-  if not os.path.exists('lib/taglib_binding.node'):
-      os.symlink(os.path.join(base_path, 'taglib_binding.node'), 'lib/taglib_binding.node')
+  if not os.path.exists('lib/taglib.node'):
+      os.symlink(os.path.join(base_path, 'taglib.node'), 'lib/taglib.node')
 
 def build(bld):
   bld.add_post_fun(post_build)
   obj = bld.new_task_gen("cxx", "shlib", "node_addon")
-  obj.target = "taglib_binding"
+  obj.target = "taglib"
   obj.source = "src/audioproperties.cc src/tag.cc src/taglib.cc"
   obj.uselib = "TAGLIB"
 
 def clean(ctx):
-  if os.path.exists('lib/taglib_binding.node'):
-    os.unlink('lib/taglib_binding.node')
+  if os.path.exists('lib/taglib.node'):
+    os.unlink('lib/taglib.node')
