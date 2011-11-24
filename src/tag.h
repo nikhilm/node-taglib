@@ -10,7 +10,7 @@ class Tag : public node::ObjectWrap {
   TagLib::Tag * tag;
   TagLib::FileRef * fileRef;
   static TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s);
-  static v8::Local<v8::String> TagLibStringToString( TagLib::String s );
+  static v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 
   //static v8::Persistent<v8::FunctionTemplate> pft;
 
@@ -39,6 +39,7 @@ class Tag : public node::ObjectWrap {
     static v8::Handle<v8::Value> GetGenre(v8::Local<v8::String> property, const v8::AccessorInfo& info);
     static void SetGenre(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
 
+    static v8::Handle<v8::Value> IsEmpty(const v8::Arguments &args);
     static v8::Handle<v8::Value> SaveTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> New(const v8::Arguments &args);
 };
