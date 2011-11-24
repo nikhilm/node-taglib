@@ -129,7 +129,7 @@ Handle<Value> Tag::New(const Arguments &args) {
         return ThrowException(String::New(err.c_str(), err.length()));
     }
 
-    TagLib::FileRef * f = new TagLib::FileRef(*path);
+    TagLib::FileRef * f = new TagLib::FileRef(*path, false /* skip reading audioProperties */);
     if ( f->isNull() || !f->tag() )
     {
         std::string err = "Failed to extract tags from " + std::string(*path);
