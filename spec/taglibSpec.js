@@ -5,6 +5,20 @@ var Taglib = require(__dirname + '/../lib/taglib')
 
 vows.describe('taglib bindings')
 .addBatch({
+  'ASF support yes/no should be defined': {
+    topic: Taglib.WITH_ASF,
+    'is boolean': function(topic) {
+      assert.isBoolean(topic);
+    }
+  },
+
+  'MP4 support yes/no should be defined': {
+    topic: Taglib.WITH_MP4,
+    'is boolean': function(topic) {
+      assert.isBoolean(topic);
+    }
+  },
+
   'reading Tags from File': {
     topic: new Taglib.Tag(__dirname+'/sample.mp3'),
     'should be a `Tag`': function (tag) {
