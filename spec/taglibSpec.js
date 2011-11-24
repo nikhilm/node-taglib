@@ -33,6 +33,32 @@ vows.describe('taglib bindings')
     }
   },
 
+  'reading Tags from non-existent file': {
+    // nested functions because vows automatically calls a topic
+    // function
+    topic: function() {
+        return function() {
+          return new Taglib.Tag('thisfileobviouslyshouldnot.exist');
+        }
+    },
+
+    'should throw an exception': function(topic) {
+        assert.throws(topic, /readable/);
+    }
+  },
+
+  'reading Tags from a non-audio file': {
+    topic: function() {
+        return function() {
+          return new Taglib.Tag(__filename);
+        }
+    },
+
+    'should throw an exception': function(topic) {
+        assert.throws(topic, /extract tags/);
+    }
+  },
+
   'writing Tags to File': {
     topic: function() {
       var filename = __dirname+'/sample-write.mp3';
