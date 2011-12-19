@@ -23,6 +23,7 @@ void AudioProperties::Initialize(Handle<Object> target)
 }
 
 AudioProperties::AudioProperties(TagLib::FileRef * ffileRef) : properties(ffileRef->audioProperties()), fileRef(ffileRef) { }
+AudioProperties::~AudioProperties() { delete fileRef; }
 
 inline AudioProperties * unwrapAudioProperties(const AccessorInfo& info) {
   return ObjectWrap::Unwrap<AudioProperties>(info.Holder());

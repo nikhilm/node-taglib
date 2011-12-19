@@ -17,6 +17,7 @@ class Tag : public node::ObjectWrap {
     public:
     static void Initialize(v8::Handle<v8::Object> target);
     Tag(TagLib::FileRef * fileRef);
+    ~Tag();
 
     static v8::Handle<v8::Value> GetTitle(v8::Local<v8::String> property, const v8::AccessorInfo& info);
     static void SetTitle(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);

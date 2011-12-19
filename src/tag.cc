@@ -29,6 +29,7 @@ void Tag::Initialize(Handle<Object> target)
 }
 
 Tag::Tag(TagLib::FileRef * ffileRef) : tag(ffileRef->tag()), fileRef(ffileRef) { }
+Tag::~Tag() { delete fileRef; }
 
 inline Tag * unwrapTag(const AccessorInfo& info) {
   return ObjectWrap::Unwrap<Tag>(info.Holder());
