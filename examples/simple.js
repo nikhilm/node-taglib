@@ -1,5 +1,7 @@
 var Taglib = require(__dirname+"/../lib/taglib")
 var util = require("util")
 
-var p = new Taglib.Tag(process.argv[2]);
-util.debug( util.inspect(p) )
+for (var i = 2; i < process.argv.length; i++) {
+    var p = new Taglib.Tag(process.argv[i]);
+    util.debug( process.argv[i] + ": " + util.inspect(p) )
+}
