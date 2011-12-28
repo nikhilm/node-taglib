@@ -1,7 +1,7 @@
 var assert = require('assert'),
     vows = require('vows'),
     fs = require('fs'),
-    Taglib = require(__dirname + '/../lib/taglib');
+    Taglib = require(__dirname + '/../taglib');
 
 vows.describe('taglib bindings')
 .addBatch({

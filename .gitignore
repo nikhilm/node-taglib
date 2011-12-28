@@ -1,5 +1,5 @@
 build/
-lib/taglib.node
+taglib.node
 spec/sample-write.mp3
 .lock-wscript
 node_modules

@@ -7,9 +7,9 @@
     "url": "git://github.com/nikhilm/node-taglib.git"
   },
   "author": "Nikhil Marathe <nsm.nikhil@gmail.com> (http://kodeclutz.blogspot.com/)",
-  "main": "lib/taglib.js",
+  "main": "taglib.node",
   "directories": {
-    "lib": "lib"
+    "example": "examples"
   },
   "devDependencies": {
     "vows" : ">= 0.5.9"
