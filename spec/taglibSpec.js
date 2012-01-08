@@ -112,6 +112,29 @@ vows.describe('taglib bindings')
     }
   },
 
+  'stripping Tags from File': {
+    topic: function() {
+      var filename, t;
+      filename = __dirname + '/sample-clean.mp3';
+      fs.writeFileSync(filename, fs.readFileSync(__dirname + '/sample.mp3'));
+      t = new Taglib.Tag(filename);
+      t.title = null;
+      t.artist = null;
+      t.album = null;
+      t.genre = null;
+      t.year = null;
+      t.comment = null;
+      t.track = null;
+      t.save();
+      return filename;
+    },
+    'should result in a Tag that `isEmpty`': function(filename) {
+      var tag;
+      tag = new Taglib.Tag(filename);
+      assert.ok(tag.isEmpty());
+    }
+  },
+
   'reading Properties from File': {
     topic: new Taglib.AudioProperties(__dirname+'/blip.mp3'),
     'should be a `AudioProperties`': function (prop) {
