@@ -13,7 +13,9 @@ using namespace node;
 using namespace node_taglib;
 
 
-extern "C" void
+extern "C" {
+
+static void
 init (Handle<Object> target)
 {
     HandleScope scope;
@@ -34,3 +36,5 @@ init (Handle<Object> target)
     Tag::Initialize(target);
 }
 
+NODE_MODULE(taglib, init)
+}
