@@ -1,8 +1,12 @@
+#include <errno.h>
+
 #include "tag.h"
 
 using namespace node_taglib;
 using namespace v8;
 using namespace node;
+
+namespace node_taglib {
 
 static Persistent<FunctionTemplate> pft;
 
@@ -125,16 +129,10 @@ Handle<Value> Tag::New(const Arguments &args) {
 
     String::Utf8Value path(args[0]->ToString());
 
-    if (!TagLib::File::isReadable(*path)) {
-        std::string err = "File " + std::string(*path) + " is not readable";
-        return ThrowException(String::New(err.c_str(), err.length()));
-    }
-
-    TagLib::FileRef * f = new TagLib::FileRef(*path, false /* skip reading audioProperties */);
-    if ( f->isNull() || !f->tag() )
-    {
-        std::string err = "Failed to extract tags from " + std::string(*path);
-        return ThrowException(String::New(err.c_str(),err.length()));
+    TagLib::FileRef *f;
+    int error;
+    if ((error = node_taglib::CreateFileRef(*path, &f)) != 0) {
+        return ThrowException(ErrorToString(error));
     }
 
     Tag * tag = new Tag(f);
@@ -165,4 +163,51 @@ TagLib::String Tag::NodeStringToTagLibString( Local<Value> s )
     String::Utf8Value str(s->ToString());
     return TagLib::String(*str, TagLib::String::UTF8);
   }
+}
+
+int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
+    TagLib::FileRef *f = NULL;
+    int error = 0;
+    if (!TagLib::File::isReadable(path)) {
+        error = EACCES;
+    }
+    else {
+        f = new TagLib::FileRef(path, false /* skip reading audioProperties */);
+
+        if ( f->isNull() || !f->tag() )
+        {
+            error = EINVAL;
+            delete f;
+        }
+    }
+
+    if (error != 0)
+        *ref = NULL;
+    else
+        *ref = f;
+
+    return error;
+}
+
+Handle<String> ErrorToString(int error) {
+    HandleScope scope;
+    std::string err;
+
+    switch (error) {
+        case EACCES:
+            err = "File is not readable";
+            break;
+
+        case EINVAL:
+            err = "Failed to extract tags";
+            break;
+
+        default:
+            err = "Unknown error";
+            break;
+    }
+
+    return scope.Close(String::New(err.c_str(), err.length()));
+}
+
 }

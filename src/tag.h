@@ -44,5 +44,8 @@ class Tag : public node::ObjectWrap {
     static v8::Handle<v8::Value> SaveTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> New(const v8::Arguments &args);
 };
+
+int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref);
+v8::Handle<v8::String> ErrorToString(int error);
 }
 #endif
