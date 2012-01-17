@@ -6,7 +6,7 @@ var assert = require('assert'),
 vows.describe('taglib bindings')
 .addBatch({
   'opening UTF-8 Path': {
-    topic: new Taglib.Tag(__dirname + '/sample-with-ütf.mp3'),
+    topic: Taglib.tagSync(__dirname + '/sample-with-ütf.mp3'),
     'should be a `Tag`': function(tag) {
       assert.equal(Taglib.Tag, tag.constructor);
     }
@@ -27,7 +27,7 @@ vows.describe('taglib bindings')
   },
 
   'reading Tags from File': {
-    topic: new Taglib.Tag(__dirname+'/sample.mp3'),
+    topic: Taglib.tagSync(__dirname+'/sample.mp3'),
     'should be a `Tag`': function (tag) {
       assert.equal(Taglib.Tag, tag.constructor);
     },
@@ -59,7 +59,7 @@ vows.describe('taglib bindings')
     // function
     topic: function() {
         return function() {
-          return new Taglib.Tag('thisfileobviouslyshouldnot.exist');
+          return Taglib.tagSync('thisfileobviouslyshouldnot.exist');
         }
     },
 
@@ -71,7 +71,7 @@ vows.describe('taglib bindings')
   'reading Tags from a non-audio file': {
     topic: function() {
         return function() {
-          return new Taglib.Tag(__filename);
+          return Taglib.tagSync(__filename);
         }
     },
 
@@ -108,13 +108,13 @@ vows.describe('taglib bindings')
     topic: function() {
       var filename = __dirname+'/sample-write.mp3';
       fs.writeFileSync(filename, fs.readFileSync(__dirname+'/sample.mp3'));
-      var t = new Taglib.Tag(filename);
+      var t = Taglib.tagSync(filename);
       t.title = 'Something completely different…';
-      t.save();
+      t.saveSync();
       return filename;
     },
     'should have written `Something completely different…` to title': function (filename) {
-      var tag = new Taglib.Tag(filename);
+      var tag = Taglib.tagSync(filename);
       assert.equal("Something completely different…", tag.title);
     }
   },
@@ -124,7 +124,7 @@ vows.describe('taglib bindings')
       var filename, t;
       filename = __dirname + '/sample-clean.mp3';
       fs.writeFileSync(filename, fs.readFileSync(__dirname + '/sample.mp3'));
-      t = new Taglib.Tag(filename);
+      t = Taglib.tagSync(filename);
       t.title = null;
       t.artist = null;
       t.album = null;
@@ -132,12 +132,12 @@ vows.describe('taglib bindings')
       t.year = null;
       t.comment = null;
       t.track = null;
-      t.save();
+      t.saveSync();
       return filename;
     },
     'should result in a Tag that `isEmpty`': function(filename) {
       var tag;
-      tag = new Taglib.Tag(filename);
+      tag = Taglib.tagSync(filename);
       assert.ok(tag.isEmpty());
     }
   },
@@ -159,5 +159,35 @@ vows.describe('taglib bindings')
     'should have 2 channels': function(prop) {
       assert.equal(2, prop.channels);
     },
+  },
+
+  'reading Tag from a file asynchronously': {
+    topic: function() {
+        Taglib.tag(__dirname+'/sample.mp3', this.callback);
+    },
+    'should be a `Tag`': function (tag) {
+      assert.equal(Taglib.Tag, tag.constructor);
+    },
+    'should be `A bit-bucket full of tags`': function (tag) {
+      assert.equal('A bit-bucket full of tags', tag.title);
+    },
+    'should be a `A bit-bucket full of tags`': function (tag) {
+      assert.equal('A bit-bucket full of tags', tag.title);
+    },
+    'should be by `gitzer\'s`': function (tag) {
+      assert.equal('gitzer\'s', tag.artist);
+    },
+    'should be on `Waffles for free!`': function (tag) {
+      assert.equal("Waffles for free!", tag.album);
+    },
+    'should be the first': function (tag) {
+      assert.equal(1, tag.track)
+    },
+    'should be from 2011': function (tag) {
+      assert.equal(2011, tag.year);
+    },
+    'should have a silly comment': function(tag) {
+      assert.equal("Salami Wiglet.", tag.comment);
+    }
   }
 }).export(module);

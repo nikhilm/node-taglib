@@ -8,28 +8,31 @@ using namespace node;
 
 namespace node_taglib {
 
-static Persistent<FunctionTemplate> pft;
+static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
 {
     HandleScope scope;
 
-    Local<FunctionTemplate> t = FunctionTemplate::New(New);
-    pft = Persistent<FunctionTemplate>::New(t);
-    pft->InstanceTemplate()->SetInternalFieldCount(1);
-    pft->SetClassName(String::NewSymbol("Tag"));
+    TagTemplate = Persistent<FunctionTemplate>::New(FunctionTemplate::New(New));
 
-    NODE_SET_PROTOTYPE_METHOD(t, "save", SaveTag);
-    NODE_SET_PROTOTYPE_METHOD(t, "isEmpty", IsEmpty);
+    TagTemplate->InstanceTemplate()->SetInternalFieldCount(1);
+    TagTemplate->SetClassName(String::NewSymbol("Tag"));
 
-    pft->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
-    pft->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
-    pft->InstanceTemplate()->SetAccessor(String::New("comment"), GetComment, SetComment);
-    pft->InstanceTemplate()->SetAccessor(String::New("artist"), GetArtist, SetArtist);
-    pft->InstanceTemplate()->SetAccessor(String::New("track"), GetTrack, SetTrack);
-    pft->InstanceTemplate()->SetAccessor(String::New("year"), GetYear, SetYear);
-    pft->InstanceTemplate()->SetAccessor(String::New("genre"), GetGenre, SetGenre);
-    target->Set(String::NewSymbol("Tag"), pft->GetFunction());
+    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
+    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
+
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("comment"), GetComment, SetComment);
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("artist"), GetArtist, SetArtist);
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("track"), GetTrack, SetTrack);
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("year"), GetYear, SetYear);
+    TagTemplate->InstanceTemplate()->SetAccessor(String::New("genre"), GetGenre, SetGenre);
+
+    target->Set(String::NewSymbol("Tag"), TagTemplate->GetFunction());
+    NODE_SET_METHOD(target, "tag", AsyncTag);
+    NODE_SET_METHOD(target, "tagSync", SyncTag);
 }
 
 Tag::Tag(TagLib::FileRef * ffileRef) : tag(ffileRef->tag()), fileRef(ffileRef) { }
@@ -115,13 +118,17 @@ Handle<Value> Tag::IsEmpty(const Arguments &args) {
   return Boolean::New(t->tag->isEmpty());
 }
 
-Handle<Value> Tag::SaveTag(const Arguments &args) {
+Handle<Value> Tag::SyncSaveTag(const Arguments &args) {
   HandleScope scope;
   Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
   return Boolean::New(t->fileRef->save());
 }
 
 Handle<Value> Tag::New(const Arguments &args) {
+    return args.This();
+}
+
+Handle<Value> Tag::SyncTag(const Arguments &args) {
     HandleScope scope;
 
     if (args.Length() < 1 || !args[0]->IsString())
@@ -132,13 +139,15 @@ Handle<Value> Tag::New(const Arguments &args) {
     TagLib::FileRef *f;
     int error;
     if ((error = node_taglib::CreateFileRef(*path, &f)) != 0) {
-        return ThrowException(ErrorToString(error));
+        Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
+        return ThrowException(String::Concat(fn, ErrorToString(error)));
     }
 
     Tag * tag = new Tag(f);
-    tag->Wrap(args.This());
+    Handle<Object> inst = TagTemplate->InstanceTemplate()->NewInstance();
+    tag->Wrap(inst);
 
-    return args.This();
+    return scope.Close(inst);
 }
 
 Handle<Value> Tag::TagLibStringToString( TagLib::String s )
@@ -210,4 +219,65 @@ Handle<String> ErrorToString(int error) {
     return scope.Close(String::New(err.c_str(), err.length()));
 }
 
+v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
+    HandleScope scope;
+
+    if (args.Length() < 1 || !args[0]->IsString())
+        return ThrowException(String::New("Expected string 'path' as first argument"));
+
+    String::Utf8Value path(args[0]->ToString());
+
+    if (args.Length() < 2 || !args[1]->IsFunction())
+        return ThrowException(String::New("Expected callback function as second argument"));
+
+    Local<Function> callback = Local<Function>::Cast(args[1]);
+
+    AsyncTagBaton *baton = new AsyncTagBaton;
+    baton->request.data = baton;
+    baton->path = strdup(*path);
+    baton->tag = NULL;
+    baton->callback = Persistent<Function>::New(callback);
+    baton->error = 0;
+
+    uv_queue_work(Loop(), &baton->request, Tag::AsyncTagRead, Tag::AsyncTagReadAfter);
+
+    return Undefined();
+}
+
+void Tag::AsyncTagRead(uv_work_t *req) {
+    AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
+
+    TagLib::FileRef *f;
+    int error;
+
+    baton->error = node_taglib::CreateFileRef(baton->path, &f);
+
+    if (baton->error == 0) {
+        baton->tag = new Tag(f);
+    }
+}
+
+void Tag::AsyncTagReadAfter(uv_work_t *req) {
+    HandleScope scope;
+
+    AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
+
+    if (baton->error) {
+        Local<Object> error = Object::New();
+        error->Set(String::New("code"), Integer::New(baton->error));
+        error->Set(String::New("message"), ErrorToString(baton->error));
+        Handle<Value> argv[] = { error, Null() };
+        baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+    }
+    else {
+        Persistent<Object> inst = Persistent<Object>::New(TagTemplate->InstanceTemplate()->NewInstance());
+        baton->tag->Wrap(inst);
+        Handle<Value> argv[] = { Null(), inst };
+        baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+    }
+
+    baton->callback.Dispose();
+    delete baton->path;
+    delete baton;
+}
 }

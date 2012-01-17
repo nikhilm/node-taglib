@@ -9,12 +9,24 @@ For now it exposes Tag and AudioProperties.
 
 ## Usage
 
-    var Tag = require('taglib').Tag;
-    var t = new Tag(path);
+    // synchronous API
+    var taglib = require('taglib').Tag;
+    var t = taglib.tagSync(path);
+
     t.title # => "Another one bites the dust"
     t.artist # => "Kween"
     t.artist = "Queen"
-    t.save() # => true
+
+    t.isEmpty() # => false
+
+    t.saveSync() # => true
+
+    // asynchronous API
+    taglib.tag(path, function(err, tag) {
+        // t is a Tag
+        t.artist # => "Queen"
+        t.save(function(err) {});
+    });
 
 ## Build
 
