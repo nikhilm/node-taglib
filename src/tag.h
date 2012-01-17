@@ -42,7 +42,6 @@ class Tag : public node::ObjectWrap {
 
     static v8::Handle<v8::Value> IsEmpty(const v8::Arguments &args);
     static v8::Handle<v8::Value> SyncSaveTag(const v8::Arguments &args);
-    static v8::Handle<v8::Value> New(const v8::Arguments &args);
     static v8::Handle<v8::Value> SyncTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> AsyncTag(const v8::Arguments &args);
     static void AsyncTagRead(uv_work_t *req);

@@ -14,7 +14,7 @@ void Tag::Initialize(Handle<Object> target)
 {
     HandleScope scope;
 
-    TagTemplate = Persistent<FunctionTemplate>::New(FunctionTemplate::New(New));
+    TagTemplate = Persistent<FunctionTemplate>::New(FunctionTemplate::New());
 
     TagTemplate->InstanceTemplate()->SetInternalFieldCount(1);
     TagTemplate->SetClassName(String::NewSymbol("Tag"));
@@ -121,11 +121,8 @@ Handle<Value> Tag::IsEmpty(const Arguments &args) {
 Handle<Value> Tag::SyncSaveTag(const Arguments &args) {
   HandleScope scope;
   Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+  assert(t->fileRef);
   return Boolean::New(t->fileRef->save());
-}
-
-Handle<Value> Tag::New(const Arguments &args) {
-    return args.This();
 }
 
 Handle<Value> Tag::SyncTag(const Arguments &args) {
