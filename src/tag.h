@@ -4,6 +4,7 @@
 #include <fileref.h>
 #include <tag.h>
 #include <node.h>
+#include <sys/time.h>
 
 namespace node_taglib {
 class Tag : public node::ObjectWrap {
@@ -46,6 +47,8 @@ class Tag : public node::ObjectWrap {
     static v8::Handle<v8::Value> AsyncTag(const v8::Arguments &args);
     static void AsyncTagRead(uv_work_t *req);
     static void AsyncTagReadAfter(uv_work_t *req);
+
+    static v8::Handle<v8::Value> Dispose(const v8::Arguments &args);
 };
 
 struct AsyncTagBaton {
@@ -54,6 +57,7 @@ struct AsyncTagBaton {
     Tag *tag;
     v8::Persistent<v8::Function> callback;
     int error;
+    suseconds_t startTime;
 };
 
 

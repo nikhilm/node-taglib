@@ -8,6 +8,14 @@ using namespace node;
 
 namespace node_taglib {
 
+static suseconds_t now()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_usec;
+}
+
+    static int count = 0;
 static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
@@ -21,6 +29,7 @@ void Tag::Initialize(Handle<Object> target)
 
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
+    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "dispose", Dispose);
 
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
@@ -36,7 +45,12 @@ void Tag::Initialize(Handle<Object> target)
 }
 
 Tag::Tag(TagLib::FileRef * ffileRef) : tag(ffileRef->tag()), fileRef(ffileRef) { }
-Tag::~Tag() { delete fileRef; }
+
+Tag::~Tag() {
+    //if (fileRef)
+    //    delete fileRef;
+    //tag = NULL;
+}
 
 inline Tag * unwrapTag(const AccessorInfo& info) {
   return ObjectWrap::Unwrap<Tag>(info.Holder());
@@ -183,7 +197,7 @@ int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
         if ( f->isNull() || !f->tag() )
         {
             error = EINVAL;
-            delete f;
+            //delete f;
         }
     }
 
@@ -235,8 +249,9 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
     baton->tag = NULL;
     baton->callback = Persistent<Function>::New(callback);
     baton->error = 0;
+    baton->startTime = now();
 
-    uv_queue_work(Loop(), &baton->request, Tag::AsyncTagRead, Tag::AsyncTagReadAfter);
+    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagRead, Tag::AsyncTagReadAfter);
 
     return Undefined();
 }
@@ -247,10 +262,17 @@ void Tag::AsyncTagRead(uv_work_t *req) {
     TagLib::FileRef *f;
     int error;
 
-    baton->error = node_taglib::CreateFileRef(baton->path, &f);
+    //baton->error = node_taglib::CreateFileRef(baton->path, &f);
+    baton->error = 0;
+    fprintf(stderr, "fileref creation %p %s %ld\n", baton, baton->path, (now() - baton->startTime));
+    //usleep(100);
+    f = new TagLib::FileRef(baton->path, false /* skip reading audioProperties */);
+    //if (!f->isNull() && f->tag())
+    //    f->tag()->title();
+    fprintf(stderr, "fileref creation DONE %p %s %ld\n", baton, baton->path, (now() - baton->startTime)/*, f, f->tag()*/);
 
     if (baton->error == 0) {
-        baton->tag = new Tag(f);
+        //baton->tag = new Tag(f);
     }
 }
 
@@ -258,7 +280,9 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     HandleScope scope;
 
     AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
+    fprintf(stderr, "fileref AFTER %p %s %ld\n", baton, baton->path, (now() - baton->startTime));
 
+    count++;
     if (baton->error) {
         Local<Object> error = Object::New();
         error->Set(String::New("code"), Integer::New(baton->error));
@@ -267,14 +291,24 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
         baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
     }
     else {
-        Persistent<Object> inst = Persistent<Object>::New(TagTemplate->InstanceTemplate()->NewInstance());
-        baton->tag->Wrap(inst);
-        Handle<Value> argv[] = { Null(), inst };
-        baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+        //Persistent<Object> inst = Persistent<Object>::New(TagTemplate->InstanceTemplate()->NewInstance());
+        //baton->tag->Wrap(inst);
+        //Handle<Value> argv[] = { Null(), inst };
+        //fprintf(stderr, "Triggering callback success %s %ld\n", baton->path, (time(NULL) - baton->startTime));
+        //baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+        baton->callback->Call(Context::GetCurrent()->Global(), 0, NULL);
     }
 
     baton->callback.Dispose();
-    delete baton->path;
-    delete baton;
+    //delete baton->path;
+    //delete baton;
 }
+
+v8::Handle<Value> Tag::Dispose(const Arguments &args) {
+    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+    //delete t->fileRef;
+    //t->fileRef = NULL;
+    return Undefined();
+}
+
 }
