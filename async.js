@@ -7,20 +7,19 @@ var isMp3 = function(path) { return path.match(/\.mp3$/); }
 
 //for (var i = 1; i < 30; i++)
 match.find(process.argv[2], {fileFilters: [isMp3]}, function(err, files) {
-    var count = 0;
-    var fEC = 0;
     var t = Date.now();
+    var count = 0;
+    console.log(files.length, "files");
     async.forEach(files, function(fn, cb) {
-        fEC++;
-        //console.log("forEach", fEC);
-        taglib.tag(fn, function() {
-            count++;
-            //console.log(tag.title);
+        taglib.tag(fn, function(err, tag) {
+            if (!err)
+                count++;
+            console.log(tag.title);
             //tag.dispose();
             cb(false);
         });
     }, function() {
-        console.log("Async", Date.now() - t);
-        console.log("Tag succeeded on ", count);
+        console.log("async", Date.now() - t);
+        console.log("Tag succeeded on", count);
     });
 });
