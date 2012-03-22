@@ -112,6 +112,10 @@ will be `null` if the save was successful, otherwise it will be an object with
 
 Save any changes in the Tag meta-data to disk _synchronously_.
 
+### Tag.isEmpty()
+
+Returns whether the tag is empty or not.
+
 ### AudioProperties(path)
 
 **NOTE: This will be replaced by a more functional API, similar to the tags API.**
