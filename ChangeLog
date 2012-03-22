@@ -1,3 +1,14 @@
+2012.03.22, v0.3.0
+
+* Added asynchronous read and write support!
+* Async support _requires_ TagLib from git.
+* Removed getFileTags and getAudioProperties.
+* Tag can no longer be used as a constructor.
+* Removed taglib.js, all functionality is in C++.
+* Expose WITH_ASF and WITH_MP4 flags so clients can check for availability of
+  these features.
+* Add complete API documentation.
+
 2011.10.30, v0.2.1
 
 * Lowercase process.ARGV in examples/properties.js to work with node v0.5.10
