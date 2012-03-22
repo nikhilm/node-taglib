@@ -15,7 +15,6 @@ match.find(process.argv[2], {fileFilters: [isMp3]}, function(err, files) {
             if (!err)
                 count++;
             console.log(tag.title);
-            //tag.dispose();
             cb(false);
         });
     }, function() {

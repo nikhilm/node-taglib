@@ -47,8 +47,6 @@ class Tag : public node::ObjectWrap {
     static v8::Handle<v8::Value> AsyncTag(const v8::Arguments &args);
     static void AsyncTagRead(uv_work_t *req);
     static void AsyncTagReadAfter(uv_work_t *req);
-
-    static v8::Handle<v8::Value> Dispose(const v8::Arguments &args);
 };
 
 struct AsyncTagBaton {

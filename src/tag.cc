@@ -29,7 +29,6 @@ void Tag::Initialize(Handle<Object> target)
 
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
-    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "dispose", Dispose);
 
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
@@ -293,13 +292,6 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     baton->callback.Dispose();
     //delete baton->path;
     //delete baton;
-}
-
-v8::Handle<Value> Tag::Dispose(const Arguments &args) {
-    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
-    //delete t->fileRef;
-    //t->fileRef = NULL;
-    return Undefined();
 }
 
 }
