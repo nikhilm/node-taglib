@@ -56,6 +56,70 @@ The `examples` show usage.
 
 ## API
 
-TODO
+### tag(path, callback)
+
+Read the tag from the file at `path` _asynchronously_. The callback should have
+signature `(err, tag)`. If errors occurred, `err` will contain the error and
+`tag` will be `null`. On success, `err` will be `null` and `tag` will be
+a `Tag`.
+
+### tagSync(path)
+
+Read the tag from the file at `path` _synchronously_. Returns a `Tag`. If
+errors occurred, throws an exception.
+
+### Tag
+
+**NOTE: A Tag object should *NOT* be created using `new`. Instead use `tag()`
+or `tagSync()`**
+
+A Tag object allows access to all the meta-data fields. node-taglib currently
+supports only the fields common to all formats:
+
+* title   (string)
+* album   (string)
+* comment (string)
+* artist  (string)
+* track   (string)
+* year    (integer)
+* genre   (string)
+
+To get a value, simply access the field -- `tag.artist`.
+
+To set a value, assign a value to the field -- `tag.year = 2012`. You **will
+have to call `saveSync()`** to actually save the changes to the file on disc.
+
+### Tag.saveSync()
+
+Save any changes in the Tag meta-data to disk.
+
+### AudioProperties(path)
+
+**NOTE: This will be replaced by a more functional API, similar to the tags API.**
+
+Object to get the audio properties of file at `path`. Throws an exception on
+errors.
+
+    var ap = new taglib.AudioProperties('path');
+    console.log("Bitrate", ap.bitrate);
+
+The following fields are available:
+
+* length
+* bitrate
+* sampleRate
+* channels
+
+Writing audio properties is not supported.
+
+### taglib.WITH_ASF
+
+A boolean representing whether node-taglib supports ASF files. Depends on
+feature being enabled in TagLib.
+
+### taglib.WITH_MP4
+
+A boolean representing whether node-taglib supports MP4 files. Depends on
+feature being enabled in TagLib.
 
 Contributors are listed at: <https://github.com/nikhilm/node-taglib/contributors>
