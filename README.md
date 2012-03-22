@@ -89,6 +89,16 @@ To get a value, simply access the field -- `tag.artist`.
 To set a value, assign a value to the field -- `tag.year = 2012`. You **will
 have to call `saveSync()`** to actually save the changes to the file on disc.
 
+#### Large number of files
+
+Due to TagLib's design, every `Tag` object in memory has to keep its backing
+file descriptor open. If you are dealing with a large number of files, you will
+soon run into problems because operating systems impose limits on how many
+files a process can have open simultaneously. If you only want to read
+meta-data and not write it immediately, then **deep copy** the fields over to
+a plain JS object, then dispose the `Tag` object so that you can operate on
+more files.
+
 ### Tag.saveSync()
 
 Save any changes in the Tag meta-data to disk.
