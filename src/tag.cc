@@ -197,7 +197,7 @@ int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
         if ( f->isNull() || !f->tag() )
         {
             error = EINVAL;
-            //delete f;
+            delete f;
         }
     }
 
@@ -288,8 +288,8 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     }
 
     baton->callback.Dispose();
-    //delete baton->path;
-    //delete baton;
+    delete baton->path;
+    delete baton;
 }
 
 v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
