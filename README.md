@@ -99,9 +99,16 @@ meta-data and not write it immediately, then **deep copy** the fields over to
 a plain JS object, then dispose the `Tag` object so that you can operate on
 more files.
 
+### Tag.save(callback)
+
+Save any changes in the Tag meta-data to disk _asynchronously_. `callback` will
+be invoked once the save is done, and should have a signature `(err)`. `err`
+will be `null` if the save was successful, otherwise it will be an object with
+`message` having the error string and `path` having the file path.
+
 ### Tag.saveSync()
 
-Save any changes in the Tag meta-data to disk.
+Save any changes in the Tag meta-data to disk _synchronously_.
 
 ### AudioProperties(path)
 
