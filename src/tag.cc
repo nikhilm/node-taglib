@@ -15,7 +15,6 @@ static suseconds_t now()
     return t.tv_usec;
 }
 
-    static int count = 0;
 static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
@@ -250,7 +249,6 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
     baton->tag = NULL;
     baton->callback = Persistent<Function>::New(callback);
     baton->error = 0;
-    baton->startTime = now();
 
     uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagRead, Tag::AsyncTagReadAfter);
 
@@ -275,7 +273,6 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
 
     AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
 
-    count++;
     if (baton->error) {
         Local<Object> error = Object::New();
         error->Set(String::New("code"), Integer::New(baton->error));

@@ -58,7 +58,6 @@ struct AsyncTagBaton {
     Tag *tag;
     v8::Persistent<v8::Function> callback;
     int error;
-    suseconds_t startTime;
 };
 
 struct AsyncSaveBaton {
