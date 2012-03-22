@@ -14,25 +14,48 @@ certain bugs present in the released v1.7 cause problems.**
 
 [taglib-git]: https://github.com/taglib/taglib
 
-    t.isEmpty() # => false
+## Example
 
-    t.saveSync() # => true
+    // load the library
+    var taglib = require('taglib');
 
     // asynchronous API
     taglib.tag(path, function(err, tag) {
-        // t is a Tag
-        t.artist # => "Queen"
-        t.save(function(err) {});
+        tag.artist; // => "Queen"
+        tag.title = "Erm";
+        tag.saveSync();
     });
 
-## Build
+    // synchronous API
+    var tag = taglib.tagSync(path);
+
+    tag.title; // => "Another one bites the dust"
+    tag.artist; // => "Kween"
+    tag.artist = "Queen";
+
+    tag.isEmpty(); // => false
+
+    tag.saveSync(); // => true
+
+## Installation
+
+### via npm (Recommended)
+
+    npm install taglib
+
+### From source
 
     # make sure you have node and taglib installed
     git clone git://github.com/nikhilm/node-taglib.git
     cd node-taglib
     node-waf configure build
     node examples/simple.js /path/to/mp3_or_ogg_file
+    # you can now require('./taglib')
 
 The `examples` show usage.
+
+## API
+
+TODO
 
 Contributors are listed at: <https://github.com/nikhilm/node-taglib/contributors>
