@@ -27,6 +27,7 @@ void Tag::Initialize(Handle<Object> target)
     TagTemplate->InstanceTemplate()->SetInternalFieldCount(1);
     TagTemplate->SetClassName(String::NewSymbol("Tag"));
 
+    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "save", AsyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
 
@@ -292,6 +293,55 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     baton->callback.Dispose();
     //delete baton->path;
     //delete baton;
+}
+
+v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
+    HandleScope scope;
+
+    if (args.Length() >= 1 && !args[0]->IsFunction())
+        return ThrowException(String::New("Expected callback function as first argument"));
+
+    Local<Function> callback = Local<Function>::Cast(args[0]);
+
+    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+
+    AsyncSaveBaton *baton = new AsyncSaveBaton;
+    baton->request.data = baton;
+    baton->tag = t;
+    baton->callback = Persistent<Function>::New(callback);
+    baton->success = false;
+
+    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncSaveTagDo, Tag::AsyncSaveTagAfter);
+
+    return Undefined();
+}
+
+void Tag::AsyncSaveTagDo(uv_work_t *req) {
+    AsyncSaveBaton *baton = static_cast<AsyncSaveBaton*>(req->data);
+
+    assert(baton->tag->fileRef);
+    baton->success = baton->tag->fileRef->save();
+}
+
+void Tag::AsyncSaveTagAfter(uv_work_t *req) {
+    HandleScope scope;
+
+    AsyncSaveBaton *baton = static_cast<AsyncSaveBaton*>(req->data);
+
+    if (baton->success) {
+        Handle<Value> argv[] = { Null() };
+        baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+    }
+    else {
+        Local<Object> error = Object::New();
+        error->Set(String::New("message"), String::New("Failed to save file"));
+        error->Set(String::New("path"), String::New(baton->tag->fileRef->file()->name()));
+        Handle<Value> argv[] = { error };
+        baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+    }
+
+    baton->callback.Dispose();
+    delete baton;
 }
 
 }

@@ -189,5 +189,26 @@ vows.describe('taglib bindings')
     'should have a silly comment': function(tag) {
       assert.equal("Salami Wiglet.", tag.comment);
     }
+  },
+
+  'writing Tag to a file asynchronously': {
+    topic: function() {
+      var filename = __dirname+'/sample-write-async.mp3';
+      fs.writeFileSync(filename, fs.readFileSync(__dirname+'/sample.mp3'));
+      var self = this;
+      Taglib.tag(filename, function(err, tag) {
+        if (err) {
+          self.callback(err);
+        }
+        tag.title = 'Something completely different…';
+        tag.save(function(err) {
+          self.callback(err, filename);
+        });
+      });
+    },
+    'should have written `Something completely different…` to title': function (filename) {
+      var tag = Taglib.tagSync(filename);
+      assert.equal(tag.title, "Something completely different…");
+    }
   }
 }).export(module);

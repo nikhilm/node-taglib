@@ -42,11 +42,14 @@ class Tag : public node::ObjectWrap {
     static void SetGenre(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
 
     static v8::Handle<v8::Value> IsEmpty(const v8::Arguments &args);
+    static v8::Handle<v8::Value> AsyncSaveTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> SyncSaveTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> SyncTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> AsyncTag(const v8::Arguments &args);
     static void AsyncTagRead(uv_work_t *req);
     static void AsyncTagReadAfter(uv_work_t *req);
+    static void AsyncSaveTagDo(uv_work_t *req);
+    static void AsyncSaveTagAfter(uv_work_t *req);
 };
 
 struct AsyncTagBaton {
@@ -58,6 +61,12 @@ struct AsyncTagBaton {
     suseconds_t startTime;
 };
 
+struct AsyncSaveBaton {
+    uv_work_t request;
+    Tag *tag;
+    v8::Persistent<v8::Function> callback;
+    bool success;
+};
 
 int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref);
 v8::Handle<v8::String> ErrorToString(int error);
