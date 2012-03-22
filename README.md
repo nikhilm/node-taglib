@@ -1,21 +1,18 @@
 node-taglib
 ===========
 
-node-taglib is a simple binding to [TagLib](http://developer.kde.org/~wheeler/taglib/) in Javascript.
+node-taglib is a simple binding to
+[TagLib](http://developer.kde.org/~wheeler/taglib/) in Javascript.
 
 It requires [node.js](http://nodejs.org).
 
-For now it exposes Tag and AudioProperties.
+For now it exposes Tag and AudioProperties. Synchronous write support is
+supported for Tag.
 
-## Usage
+**NOTE: Asynchronous API requires use of TagLib [from git][taglib-git] since
+certain bugs present in the released v1.7 cause problems.**
 
-    // synchronous API
-    var taglib = require('taglib').Tag;
-    var t = taglib.tagSync(path);
-
-    t.title # => "Another one bites the dust"
-    t.artist # => "Kween"
-    t.artist = "Queen"
+[taglib-git]: https://github.com/taglib/taglib
 
     t.isEmpty() # => false
 
