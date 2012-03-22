@@ -115,7 +115,7 @@ vows.describe('taglib bindings')
     },
     'should have written `Something completely different…` to title': function (filename) {
       var tag = Taglib.tagSync(filename);
-      assert.equal("Something completely different…", tag.title);
+      assert.equal(tag.title, "Something completely different…");
     }
   },
 
