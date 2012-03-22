@@ -59,9 +59,11 @@ The `examples` show usage.
 ### tag(path, callback)
 
 Read the tag from the file at `path` _asynchronously_. The callback should have
-signature `(err, tag)`. If errors occurred, `err` will contain the error and
-`tag` will be `null`. On success, `err` will be `null` and `tag` will be
-a `Tag`.
+signature `(err, tag)`. On success, `err` will be `null` and `tag` will be
+a `Tag`. If errors occurred, `err` will contain the error and
+`tag` will be `null`. `err` will be an object with field `code` having the
+integer error code (`errno.h`) and field `message` will have a string
+representation.
 
 ### tagSync(path)
 
