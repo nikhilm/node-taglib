@@ -6,7 +6,7 @@
     "type": "git",
     "url": "git://github.com/nikhilm/node-taglib.git"
   },
-  "author": "Nikhil Marathe <nsm.nikhil@gmail.com> (http://kodeclutz.blogspot.com/)",
+  "author": "Nikhil Marathe <nsm.nikhil@gmail.com> (http://nikhilism.com)",
   "main": "taglib.node",
   "directories": {
     "example": "examples"
