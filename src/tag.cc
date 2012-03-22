@@ -47,9 +47,10 @@ void Tag::Initialize(Handle<Object> target)
 Tag::Tag(TagLib::FileRef * ffileRef) : tag(ffileRef->tag()), fileRef(ffileRef) { }
 
 Tag::~Tag() {
-    //if (fileRef)
-    //    delete fileRef;
-    //tag = NULL;
+    if (fileRef)
+        delete fileRef;
+    fileRef = NULL;
+    tag = NULL;
 }
 
 inline Tag * unwrapTag(const AccessorInfo& info) {
@@ -262,17 +263,10 @@ void Tag::AsyncTagRead(uv_work_t *req) {
     TagLib::FileRef *f;
     int error;
 
-    //baton->error = node_taglib::CreateFileRef(baton->path, &f);
-    baton->error = 0;
-    fprintf(stderr, "fileref creation %p %s %ld\n", baton, baton->path, (now() - baton->startTime));
-    //usleep(100);
-    f = new TagLib::FileRef(baton->path, false /* skip reading audioProperties */);
-    //if (!f->isNull() && f->tag())
-    //    f->tag()->title();
-    fprintf(stderr, "fileref creation DONE %p %s %ld\n", baton, baton->path, (now() - baton->startTime)/*, f, f->tag()*/);
+    baton->error = node_taglib::CreateFileRef(baton->path, &f);
 
     if (baton->error == 0) {
-        //baton->tag = new Tag(f);
+        baton->tag = new Tag(f);
     }
 }
 
@@ -280,7 +274,6 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     HandleScope scope;
 
     AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
-    fprintf(stderr, "fileref AFTER %p %s %ld\n", baton, baton->path, (now() - baton->startTime));
 
     count++;
     if (baton->error) {
@@ -291,12 +284,10 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
         baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
     }
     else {
-        //Persistent<Object> inst = Persistent<Object>::New(TagTemplate->InstanceTemplate()->NewInstance());
-        //baton->tag->Wrap(inst);
-        //Handle<Value> argv[] = { Null(), inst };
-        //fprintf(stderr, "Triggering callback success %s %ld\n", baton->path, (time(NULL) - baton->startTime));
-        //baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
-        baton->callback->Call(Context::GetCurrent()->Global(), 0, NULL);
+        Persistent<Object> inst = Persistent<Object>::New(TagTemplate->InstanceTemplate()->NewInstance());
+        baton->tag->Wrap(inst);
+        Handle<Value> argv[] = { Null(), inst };
+        baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
     }
 
     baton->callback.Dispose();
