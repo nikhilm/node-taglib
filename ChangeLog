@@ -1,3 +1,8 @@
+2012.04.05, v0.3.1
+
+* Fix bug in npm package where a build cache was included in the package.
+* Add #include <string.h> to src/tag.cc to fix gcc errors.
+
 2012.03.22, v0.3.0
 
 * Added asynchronous read and write support!
