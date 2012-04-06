@@ -30,6 +30,7 @@ void Tag::Initialize(Handle<Object> target)
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "save", AsyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
+    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "dispose", Dispose);
 
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
@@ -51,6 +52,14 @@ Tag::~Tag() {
         delete fileRef;
     fileRef = NULL;
     tag = NULL;
+}
+
+v8::Handle<v8::Value> Tag::Dispose(const v8::Arguments &args) {
+    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+    if (t->fileRef) {
+        delete t->fileRef;
+        t->fileRef = NULL;
+    }
 }
 
 inline Tag * unwrapTag(const AccessorInfo& info) {
