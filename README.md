@@ -56,6 +56,33 @@ The `examples` show usage.
 
 ## API
 
+### read(path, callback)
+
+The function you will most likely want to use. `callback` should have signature
+`callback(err, tag, audioProperties)` where `tag` and `audioProperties` are
+plain-old JavaScript objects. For the distinction between these and `Tag`, see
+`Tag` below.
+
+tag can have the following fields. node-taglib currently supports only the
+fields common to all formats:
+
+* title   (string)
+* album   (string)
+* comment (string)
+* artist  (string)
+* track   (string)
+* year    (integer)
+* genre   (string)
+
+The following fields are available in audioProperties, all are integers:
+
+* length
+* bitrate
+* sampleRate
+* channels
+
+Writing audio properties is not supported.
+
 ### tag(path, callback)
 
 Read the tag from the file at `path` _asynchronously_. The callback should have
@@ -75,16 +102,8 @@ errors occurred, throws an exception.
 **NOTE: A Tag object should *NOT* be created using `new`. Instead use `tag()`
 or `tagSync()`**
 
-A Tag object allows access to all the meta-data fields. node-taglib currently
-supports only the fields common to all formats:
-
-* title   (string)
-* album   (string)
-* comment (string)
-* artist  (string)
-* track   (string)
-* year    (integer)
-* genre   (string)
+A Tag object allows _read-write_ access to all the meta-data fields. For valid
+field names see `read()` above.
 
 To get a value, simply access the field -- `tag.artist`.
 
@@ -96,10 +115,9 @@ have to call `saveSync()`** to actually save the changes to the file on disc.
 Due to TagLib's design, every `Tag` object in memory has to keep its backing
 file descriptor open. If you are dealing with a large number of files, you will
 soon run into problems because operating systems impose limits on how many
-files a process can have open simultaneously. If you only want to read
-meta-data and not write it immediately, then **deep copy** the fields over to
-a plain JS object, then dispose the `Tag` object so that you can operate on
-more files.
+files a process can have open simultaneously. If you want to only read tags,
+use `read()` instead as it will immediately close the file after the tag is
+read.
 
 ### Tag.save(callback)
 
@@ -115,25 +133,6 @@ Save any changes in the Tag meta-data to disk _synchronously_.
 ### Tag.isEmpty()
 
 Returns whether the tag is empty or not.
-
-### AudioProperties(path)
-
-**NOTE: This will be replaced by a more functional API, similar to the tags API.**
-
-Object to get the audio properties of file at `path`. Throws an exception on
-errors.
-
-    var ap = new taglib.AudioProperties('path');
-    console.log("Bitrate", ap.bitrate);
-
-The following fields are available:
-
-* length
-* bitrate
-* sampleRate
-* channels
-
-Writing audio properties is not supported.
 
 ### taglib.WITH_ASF
 

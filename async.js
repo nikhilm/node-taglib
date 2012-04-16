@@ -11,7 +11,7 @@ match.find(process.argv[2], {fileFilters: [isMp3]}, function(err, files) {
     var count = 0;
     console.log(files.length, "files");
     async.forEach(files, function(fn, cb) {
-        taglib.tag(fn, function(err, tag) {
+        taglib.read(fn, function(err, tag) {
             if (err) {
                 console.log("ERROR");
                 return cb(false);

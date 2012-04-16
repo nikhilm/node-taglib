@@ -14,6 +14,10 @@ v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
 
+v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args);
+void AsyncReadFileDo(uv_work_t *req);
+void AsyncReadFileAfter(uv_work_t *req);
+
 struct AsyncBaton {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;

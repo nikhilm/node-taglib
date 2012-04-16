@@ -80,30 +80,6 @@ vows.describe('taglib bindings')
     }
   },
 
-  'reading AudioProperties from non-existent file': {
-    topic: function() {
-        return function() {
-          return new Taglib.AudioProperties('thisfileobviouslyshouldnot.exist');
-        }
-    },
-
-    'should throw an exception': function(topic) {
-        assert.throws(topic, /readable/);
-    }
-  },
-
-  'reading AudioProperties from a non-audio file': {
-    topic: function() {
-        return function() {
-          return new Taglib.AudioProperties(__filename);
-        }
-    },
-
-    'should throw an exception': function(topic) {
-        assert.throws(topic, /extract audio properties/);
-    }
-  },
-
   'writing Tags to File': {
     topic: function() {
       var filename = __dirname+'/sample-write.mp3';
@@ -140,25 +116,6 @@ vows.describe('taglib bindings')
       tag = Taglib.tagSync(filename);
       assert.ok(tag.isEmpty());
     }
-  },
-
-  'reading Properties from File': {
-    topic: new Taglib.AudioProperties(__dirname+'/blip.mp3'),
-    'should be a `AudioProperties`': function (prop) {
-      assert.equal(Taglib.AudioProperties, prop.constructor);
-    },
-    'should have length 1 second': function(prop) {
-      assert.equal(1, prop.length);
-    },
-    'should have bitrate 128kbps': function(prop) {
-      assert.equal(128, prop.bitrate);
-    },
-    'should have sampleRate 44100Hz': function(prop) {
-      assert.equal(44100, prop.sampleRate);
-    },
-    'should have 2 channels': function(prop) {
-      assert.equal(2, prop.channels);
-    },
   },
 
   'reading Tag from a file asynchronously': {
@@ -210,5 +167,69 @@ vows.describe('taglib bindings')
       var tag = Taglib.tagSync(filename);
       assert.equal(tag.title, "Something completely different…");
     }
+  },
+
+  'reading file metadata asynchronously': {
+    topic: function() {
+      Taglib.read(__dirname+'/sample.mp3', this.callback);
+    },
+
+    'should be called with three arguments': function (err, tag, props) {
+      assert.isNull(err);
+      assert.isObject(tag);
+      assert.isObject(props);
+    },
+
+    'reading tags': {
+      topic: function() {
+        Taglib.read(__dirname+'/sample.mp3', this.callback);
+      },
+
+      'title should be `A bit-bucket full of tags`': function (tag) {
+        assert.equal(tag.title, 'A bit-bucket full of tags');
+      },
+      'artist should be by `gitzer\'s`': function (tag) {
+        assert.equal(tag.artist, 'gitzer\'s');
+      },
+      'album should be on `Waffles for free!`': function (tag) {
+        assert.equal(tag.album, "Waffles for free!");
+      },
+      'track should be the first': function (tag) {
+        assert.equal(tag.track, 1);
+      },
+      'should be from 2011': function (tag) {
+        assert.equal(tag.year, 2011);
+      },
+      'should have a silly comment': function(tag) {
+        assert.equal(tag.comment, "Salami Wiglet.");
+      }
+    },
+
+    'reading audioProperties': {
+      topic: function() {
+        Taglib.read(__dirname+'/blip.mp3', this.callback);
+      },
+
+      'should have length 1 second': function(err, _, prop) {
+        assert.equal(prop.length, 1);
+      },
+      'should have bitrate 128kbps': function(err, _, prop) {
+        assert.equal(prop.bitrate, 128);
+      },
+      'should have sampleRate 44100Hz': function(err, _, prop) {
+        assert.equal(prop.sampleRate, 44100);
+      },
+      'should have 2 channels': function(err, _, prop) {
+        assert.equal(prop.channels, 2);
+      }
+    },
+  },
+
+  'read() on non-existent file': {
+    topic: function() {
+      return function() {
+        Taglib.read('thisfileobviouslyshouldnot.exist', this.callback);
+      }
+    },
   }
 }).export(module);
