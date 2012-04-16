@@ -3,6 +3,8 @@
 
 #include "tag.h"
 
+#include "taglib.h"
+
 using namespace node_taglib;
 using namespace v8;
 using namespace node;
@@ -30,7 +32,6 @@ void Tag::Initialize(Handle<Object> target)
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "save", AsyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
-    NODE_SET_PROTOTYPE_METHOD(TagTemplate, "dispose", Dispose);
 
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
     TagTemplate->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
@@ -52,14 +53,6 @@ Tag::~Tag() {
         delete fileRef;
     fileRef = NULL;
     tag = NULL;
-}
-
-v8::Handle<v8::Value> Tag::Dispose(const v8::Arguments &args) {
-    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
-    if (t->fileRef) {
-        delete t->fileRef;
-        t->fileRef = NULL;
-    }
 }
 
 inline Tag * unwrapTag(const AccessorInfo& info) {
@@ -171,75 +164,6 @@ Handle<Value> Tag::SyncTag(const Arguments &args) {
     return scope.Close(inst);
 }
 
-Handle<Value> Tag::TagLibStringToString( TagLib::String s )
-{
-  if(s.isEmpty()) {
-    return Null();
-  }
-  else {
-    TagLib::ByteVector str = s.data(TagLib::String::UTF16);
-    // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
-    // Byte Order Mark
-    return String::New((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
-  }
-}
-
-TagLib::String Tag::NodeStringToTagLibString( Local<Value> s )
-{
-  if(s->IsNull()) {
-    return TagLib::String::null;
-  }
-  else {
-    String::Utf8Value str(s->ToString());
-    return TagLib::String(*str, TagLib::String::UTF8);
-  }
-}
-
-int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
-    TagLib::FileRef *f = NULL;
-    int error = 0;
-    if (!TagLib::File::isReadable(path)) {
-        error = EACCES;
-    }
-    else {
-        f = new TagLib::FileRef(path, false /* skip reading audioProperties */);
-
-        if ( f->isNull() || !f->tag() )
-        {
-            error = EINVAL;
-            delete f;
-        }
-    }
-
-    if (error != 0)
-        *ref = NULL;
-    else
-        *ref = f;
-
-    return error;
-}
-
-Handle<String> ErrorToString(int error) {
-    HandleScope scope;
-    std::string err;
-
-    switch (error) {
-        case EACCES:
-            err = "File is not readable";
-            break;
-
-        case EINVAL:
-            err = "Failed to extract tags";
-            break;
-
-        default:
-            err = "Unknown error";
-            break;
-    }
-
-    return scope.Close(String::New(err.c_str(), err.length()));
-}
-
 v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
     HandleScope scope;
 
@@ -253,7 +177,7 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
 
     Local<Function> callback = Local<Function>::Cast(args[1]);
 
-    AsyncTagBaton *baton = new AsyncTagBaton;
+    AsyncBaton *baton = new AsyncBaton;
     baton->request.data = baton;
     baton->path = strdup(*path);
     baton->tag = NULL;
@@ -266,7 +190,7 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
 }
 
 void Tag::AsyncTagRead(uv_work_t *req) {
-    AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
+    AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     TagLib::FileRef *f;
     int error;
@@ -281,7 +205,7 @@ void Tag::AsyncTagRead(uv_work_t *req) {
 void Tag::AsyncTagReadAfter(uv_work_t *req) {
     HandleScope scope;
 
-    AsyncTagBaton *baton = static_cast<AsyncTagBaton*>(req->data);
+    AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     if (baton->error) {
         Local<Object> error = Object::New();
@@ -312,11 +236,11 @@ v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
 
     Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
 
-    AsyncSaveBaton *baton = new AsyncSaveBaton;
+    AsyncBaton *baton = new AsyncBaton;
     baton->request.data = baton;
     baton->tag = t;
     baton->callback = Persistent<Function>::New(callback);
-    baton->success = false;
+    baton->error = 1;
 
     uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncSaveTagDo, Tag::AsyncSaveTagAfter);
 
@@ -324,26 +248,26 @@ v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
 }
 
 void Tag::AsyncSaveTagDo(uv_work_t *req) {
-    AsyncSaveBaton *baton = static_cast<AsyncSaveBaton*>(req->data);
+    AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     assert(baton->tag->fileRef);
-    baton->success = baton->tag->fileRef->save();
+    baton->error = !baton->tag->fileRef->save();
 }
 
 void Tag::AsyncSaveTagAfter(uv_work_t *req) {
     HandleScope scope;
 
-    AsyncSaveBaton *baton = static_cast<AsyncSaveBaton*>(req->data);
+    AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
-    if (baton->success) {
-        Handle<Value> argv[] = { Null() };
-        baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
-    }
-    else {
+    if (baton->error) {
         Local<Object> error = Object::New();
         error->Set(String::New("message"), String::New("Failed to save file"));
         error->Set(String::New("path"), String::New(baton->tag->fileRef->file()->name()));
         Handle<Value> argv[] = { error };
+        baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+    }
+    else {
+        Handle<Value> argv[] = { Null() };
         baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
     }
 

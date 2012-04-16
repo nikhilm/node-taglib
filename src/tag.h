@@ -10,8 +10,6 @@ namespace node_taglib {
 class Tag : public node::ObjectWrap {
   TagLib::Tag * tag;
   TagLib::FileRef * fileRef;
-  static TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s);
-  static v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 
   //static v8::Persistent<v8::FunctionTemplate> pft;
 
@@ -44,7 +42,6 @@ class Tag : public node::ObjectWrap {
     static v8::Handle<v8::Value> IsEmpty(const v8::Arguments &args);
     static v8::Handle<v8::Value> AsyncSaveTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> SyncSaveTag(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Dispose(const v8::Arguments &args);
     static v8::Handle<v8::Value> SyncTag(const v8::Arguments &args);
     static v8::Handle<v8::Value> AsyncTag(const v8::Arguments &args);
     static void AsyncTagRead(uv_work_t *req);
@@ -52,23 +49,5 @@ class Tag : public node::ObjectWrap {
     static void AsyncSaveTagDo(uv_work_t *req);
     static void AsyncSaveTagAfter(uv_work_t *req);
 };
-
-struct AsyncTagBaton {
-    uv_work_t request;
-    TagLib::FileName path;
-    Tag *tag;
-    v8::Persistent<v8::Function> callback;
-    int error;
-};
-
-struct AsyncSaveBaton {
-    uv_work_t request;
-    Tag *tag;
-    v8::Persistent<v8::Function> callback;
-    bool success;
-};
-
-int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref);
-v8::Handle<v8::String> ErrorToString(int error);
 }
 #endif
