@@ -26,7 +26,7 @@ vows.describe('taglib bindings')
     }
   },
 
-  'reading Tags from File': {
+  'reading Tags from File using tagSync': {
     topic: Taglib.tagSync(__dirname+'/sample.mp3'),
     'should be a `Tag`': function (tag) {
       assert.equal(Taglib.Tag, tag.constructor);
@@ -54,7 +54,7 @@ vows.describe('taglib bindings')
     }
   },
 
-  'reading Tags from non-existent file': {
+  'reading Tags from non-existent file using tagSync': {
     // nested functions because vows automatically calls a topic
     // function
     topic: function() {
@@ -68,7 +68,7 @@ vows.describe('taglib bindings')
     }
   },
 
-  'reading Tags from a non-audio file': {
+  'reading Tags from a non-audio file using tagSync': {
     topic: function() {
         return function() {
           return Taglib.tagSync(__filename);
