@@ -129,9 +129,6 @@ void AsyncReadFileAfter(uv_work_t *req) {
             propsObj->Set(String::New("sampleRate"), Integer::New(props->sampleRate()));
             propsObj->Set(String::New("channels"), Integer::New(props->channels()));
         }
-        else {
-            fprintf(stderr, "No audioprops\n");
-        }
 
         Handle<Value> argv[] = { Null(), tagObj, propsObj };
         baton->callback->Call(Context::GetCurrent()->Global(), 3, argv);
