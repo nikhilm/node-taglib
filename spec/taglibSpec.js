@@ -225,11 +225,23 @@ vows.describe('taglib bindings')
     },
   },
 
+  'read() on a file without tags': {
+    topic: function() {
+      Taglib.read(__dirname+'/blip.mp3', this.callback);
+    },
+
+    'should have empty tag object': function(err, tag, _) {
+      assert.isObject(tag) && assert.isEmpty(tag);
+    }
+  },
+
   'read() on non-existent file': {
     topic: function() {
-      return function() {
-        Taglib.read('thisfileobviouslyshouldnot.exist', this.callback);
-      }
+      Taglib.read('thisfileobviouslyshouldnot.exist', this.callback);
     },
+
+    'should error': function(err, _, _) {
+      assert.isNotNull(err);
+    }
   }
 }).export(module);

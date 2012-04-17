@@ -106,20 +106,22 @@ void AsyncReadFileAfter(uv_work_t *req) {
         Local<Object> error = Object::New();
         error->Set(String::New("code"), Integer::New(baton->error));
         error->Set(String::New("message"), ErrorToString(baton->error));
-        Handle<Value> argv[] = { error, Null() };
-        baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+        Handle<Value> argv[] = { error, Null(), Null() };
+        baton->callback->Call(Context::GetCurrent()->Global(), 3, argv);
     }
     else {
         // read the data, put it in objects and delete the fileref
         TagLib::Tag *tag = baton->fileRef->tag();
         Local<Object> tagObj = Object::New();
-        tagObj->Set(String::New("album"), TagLibStringToString(tag->album()));
-        tagObj->Set(String::New("artist"), TagLibStringToString(tag->artist()));
-        tagObj->Set(String::New("comment"), TagLibStringToString(tag->comment()));
-        tagObj->Set(String::New("genre"), TagLibStringToString(tag->genre()));
-        tagObj->Set(String::New("title"), TagLibStringToString(tag->title()));
-        tagObj->Set(String::New("track"), Integer::New(tag->track()));
-        tagObj->Set(String::New("year"), Integer::New(tag->year()));
+        if (!tag->isEmpty()) {
+            tagObj->Set(String::New("album"), TagLibStringToString(tag->album()));
+            tagObj->Set(String::New("artist"), TagLibStringToString(tag->artist()));
+            tagObj->Set(String::New("comment"), TagLibStringToString(tag->comment()));
+            tagObj->Set(String::New("genre"), TagLibStringToString(tag->genre()));
+            tagObj->Set(String::New("title"), TagLibStringToString(tag->title()));
+            tagObj->Set(String::New("track"), Integer::New(tag->track()));
+            tagObj->Set(String::New("year"), Integer::New(tag->year()));
+        }
 
         TagLib::AudioProperties *props = baton->fileRef->audioProperties();
         Local<Object> propsObj = Object::New();

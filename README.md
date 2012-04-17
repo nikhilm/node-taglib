@@ -63,8 +63,12 @@ The function you will most likely want to use. `callback` should have signature
 plain-old JavaScript objects. For the distinction between these and `Tag`, see
 `Tag` below.
 
-tag can have the following fields. node-taglib currently supports only the
-fields common to all formats:
+If there was an error reading the file, `err` will be non-null and `tag` and
+`audioProperties` will be `null`.
+
+If no tag was found, `tag` will be an empty object (falsy). `tag` can have the
+following fields. node-taglib currently supports only the fields common to all
+formats:
 
 * title   (string)
 * album   (string)
@@ -74,7 +78,9 @@ fields common to all formats:
 * year    (integer)
 * genre   (string)
 
-The following fields are available in audioProperties, all are integers:
+If no audio properties could be read, `audioProperties` will be an empty object
+(falsy). The following fields are available in `audioProperties`, all are
+integers:
 
 * length
 * bitrate
