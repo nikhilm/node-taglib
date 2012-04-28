@@ -1,4 +1,4 @@
 #!/bin/sh
 make
 npm link vows
-./node_modules/vows/bin/vows spec/taglibSpec.js --spec
+./node_modules/vows/bin/vows spec/taglibSpec.js spec/buffersSpec.js --spec
