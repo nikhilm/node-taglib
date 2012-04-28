@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>node-taglib by nikhilm</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>node-taglib</h1>
+        <p>Simple taglib bindings to Javascript using node.js</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/nikhilm/node-taglib" class="button fork"><strong>Fork On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/nikhilm/node-taglib/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/nikhilm/node-taglib/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>node-taglib</h1>
+
+<p>node-taglib is a simple binding to
+<a href="http://developer.kde.org/%7Ewheeler/taglib/">TagLib</a> in Javascript.</p>
+
+<p>It requires <a href="http://nodejs.org">node.js</a>.</p>
+
+<p>For now it exposes Tag and AudioProperties. Synchronous write support is
+supported for Tag.</p>
+
+<p><strong>NOTE: Asynchronous API requires use of TagLib <a href="https://github.com/taglib/taglib">from git</a> since
+certain bugs present in the released v1.7 cause problems.</strong></p>
+
+<h2>Example</h2>
+
+<pre><code>// load the library
+var taglib = require('taglib');
+
+// asynchronous API
+taglib.tag(path, function(err, tag) {
+    tag.artist; // =&gt; "Queen"
+    tag.title = "Erm";
+    tag.saveSync();
+});
+
+// synchronous API
+var tag = taglib.tagSync(path);
+
+tag.title; // =&gt; "Another one bites the dust"
+tag.artist; // =&gt; "Kween"
+tag.artist = "Queen";
+
+tag.isEmpty(); // =&gt; false
+
+tag.saveSync(); // =&gt; true
+</code></pre>
+
+<h2>Installation</h2>
+
+<h3>via npm (Recommended)</h3>
+
+<pre><code>npm install taglib
+</code></pre>
+
+<h3>From source</h3>
+
+<pre><code># make sure you have node and taglib installed
+git clone git://github.com/nikhilm/node-taglib.git
+cd node-taglib
+node-waf configure build
+node examples/simple.js /path/to/mp3_or_ogg_file
+# you can now require('./taglib')
+</code></pre>
+
+<p>The <code>examples</code> show usage.</p>
+
+<h2>API</h2>
+
+<h3>read(path, callback)</h3>
+
+<p>The function you will most likely want to use. <code>callback</code> should have signature
+<code>callback(err, tag, audioProperties)</code> where <code>tag</code> and <code>audioProperties</code> are
+plain-old JavaScript objects. For the distinction between these and <code>Tag</code>, see
+<code>Tag</code> below.</p>
+
+<p>If there was an error reading the file, <code>err</code> will be non-null and <code>tag</code> and
+<code>audioProperties</code> will be <code>null</code>.</p>
+
+<p>If no tag was found, <code>tag</code> will be an empty object (falsy). <code>tag</code> can have the
+following fields. node-taglib currently supports only the fields common to all
+formats:</p>
+
+<ul>
+<li>title   (string)</li>
+<li>album   (string)</li>
+<li>comment (string)</li>
+<li>artist  (string)</li>
+<li>track   (string)</li>
+<li>year    (integer)</li>
+<li>genre   (string)</li>
+</ul><p>If no audio properties could be read, <code>audioProperties</code> will be an empty object
+(falsy). The following fields are available in <code>audioProperties</code>, all are
+integers:</p>
+
+<ul>
+<li>length</li>
+<li>bitrate</li>
+<li>sampleRate</li>
+<li>channels</li>
+</ul><p>Writing audio properties is not supported.</p>
+
+<h3>tag(path, callback)</h3>
+
+<p>Read the tag from the file at <code>path</code> <em>asynchronously</em>. The callback should have
+signature <code>(err, tag)</code>. On success, <code>err</code> will be <code>null</code> and <code>tag</code> will be
+a <code>Tag</code>. If errors occurred, <code>err</code> will contain the error and
+<code>tag</code> will be <code>null</code>. <code>err</code> will be an object with field <code>code</code> having the
+integer error code (<code>errno.h</code>) and field <code>message</code> will have a string
+representation.</p>
+
+<h3>tagSync(path)</h3>
+
+<p>Read the tag from the file at <code>path</code> <em>synchronously</em>. Returns a <code>Tag</code>. If
+errors occurred, throws an exception.</p>
+
+<h3>Tag</h3>
+
+<p><strong>NOTE: A Tag object should <em>NOT</em> be created using <code>new</code>. Instead use <code>tag()</code>
+or <code>tagSync()</code></strong></p>
+
+<p>A Tag object allows <em>read-write</em> access to all the meta-data fields. For valid
+field names see <code>read()</code> above.</p>
+
+<p>To get a value, simply access the field -- <code>tag.artist</code>.</p>
+
+<p>To set a value, assign a value to the field -- <code>tag.year = 2012</code>. You <strong>will
+have to call <code>saveSync()</code></strong> to actually save the changes to the file on disc.</p>
+
+<h5>Large number of files</h5>
+
+<p>Due to TagLib's design, every <code>Tag</code> object in memory has to keep its backing
+file descriptor open. If you are dealing with a large number of files, you will
+soon run into problems because operating systems impose limits on how many
+files a process can have open simultaneously. If you want to only read tags,
+use <code>read()</code> instead as it will immediately close the file after the tag is
+read.</p>
+
+<h3>Tag.save(callback)</h3>
+
+<p>Save any changes in the Tag meta-data to disk <em>asynchronously</em>. <code>callback</code> will
+be invoked once the save is done, and should have a signature <code>(err)</code>. <code>err</code>
+will be <code>null</code> if the save was successful, otherwise it will be an object with
+<code>message</code> having the error string and <code>path</code> having the file path.</p>
+
+<h3>Tag.saveSync()</h3>
+
+<p>Save any changes in the Tag meta-data to disk <em>synchronously</em>.</p>
+
+<h3>Tag.isEmpty()</h3>
+
+<p>Returns whether the tag is empty or not.</p>
+
+<h3>taglib.WITH_ASF</h3>
+
+<p>A boolean representing whether node-taglib supports ASF files. Depends on
+feature being enabled in TagLib.</p>
+
+<h3>taglib.WITH_MP4</h3>
+
+<p>A boolean representing whether node-taglib supports MP4 files. Depends on
+feature being enabled in TagLib.</p>
+
+<p>Contributors are listed at: <a href="https://github.com/nikhilm/node-taglib/contributors">https://github.com/nikhilm/node-taglib/contributors</a></p>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/nikhilm">nikhilm</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+    
+  </body>
+</html>
