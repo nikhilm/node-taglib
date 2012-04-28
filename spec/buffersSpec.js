@@ -11,7 +11,7 @@ vows.describe('taglib bindings: Buffers')
       var resolver = function(buffer) {
         return 'mp3';
       }
-      Taglib.readBuffer(contents, [resolver], this.callback);
+      Taglib.read(contents, [resolver], this.callback);
     },
 
     'should not error': function(err, tag, props) {
