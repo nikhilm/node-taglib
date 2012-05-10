@@ -3,9 +3,9 @@ var assert = require('assert'),
     fs = require('fs'),
     Taglib = require(__dirname + '/../taglib');
 
-vows.describe('taglib bindings: Buffers')
+vows.describe('taglib bindings: Resolver')
 .addBatch({
-  'reading from an mp3 Buffer': {
+  'reading from an mp3 file': {
     topic: function() {
       var contents = fs.readFileSync(__dirname + '/sample.mp3');
       var resolver = function(buffer) {
