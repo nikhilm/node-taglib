@@ -9,6 +9,23 @@
 #include <string.h>
 
 #include <v8.h>
+#include <asffile.h>
+#include <mpegfile.h>
+#include <vorbisfile.h>
+#include <flacfile.h>
+#include <oggflacfile.h>
+#include <mpcfile.h>
+#include <mp4file.h>
+#include <wavpackfile.h>
+#include <speexfile.h>
+#include <trueaudiofile.h>
+#include <aifffile.h>
+#include <wavfile.h>
+#include <apefile.h>
+#include <modfile.h>
+#include <s3mfile.h>
+#include <itfile.h>
+#include <xmfile.h>
 
 #include "audioproperties.h"
 #include "tag.h"
@@ -143,28 +160,143 @@ void AsyncReadFileAfter(uv_work_t *req) {
 
 Handle<Value> TagLibStringToString( TagLib::String s )
 {
-  if(s.isEmpty()) {
-    return Null();
-  }
-  else {
-    TagLib::ByteVector str = s.data(TagLib::String::UTF16);
-    // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
-    // Byte Order Mark
-    return String::New((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
-  }
+    if(s.isEmpty()) {
+        return Null();
+    }
+    else {
+        TagLib::ByteVector str = s.data(TagLib::String::UTF16);
+        // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
+        // Byte Order Mark
+        return String::New((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
+    }
 }
 
 TagLib::String NodeStringToTagLibString( Local<Value> s )
 {
-  if(s->IsNull()) {
-    return TagLib::String::null;
-  }
-  else {
-    String::Utf8Value str(s->ToString());
-    return TagLib::String(*str, TagLib::String::UTF8);
-  }
+    if(s->IsNull()) {
+        return TagLib::String::null;
+    }
+    else {
+        String::Utf8Value str(s->ToString());
+        return TagLib::String(*str, TagLib::String::UTF8);
+    }
 }
 
+Handle<Value> AddResolvers(const Arguments &args)
+{
+    for (int i = 0; i < args.Length(); i++) {
+        Local<Value> arg = args[i];
+        if (arg->IsFunction()) {
+            Persistent<Function> resolver = Persistent<Function>::New(Local<Function>::Cast(arg));
+            TagLib::FileRef::addFileTypeResolver(new CallbackResolver(resolver));
+        }
+    }
+}
+
+CallbackResolver::CallbackResolver(Persistent<Function> func)
+    : TagLib::FileRef::FileTypeResolver()
+    , resolverFunc(func)
+    // the constructor is always called in the v8 thread
+#ifdef _WIN32
+    , created_in(GetCurrentThreadId())
+#else
+    , created_in(pthread_self())
+#endif
+{
+}
+
+void CallbackResolver::invokeResolverCb(uv_async_t *handle, int status)
+{
+    AsyncResolverBaton *baton = (AsyncResolverBaton *) handle->data;
+    invokeResolver(baton);
+    uv_mutex_unlock(&baton->mutex);
+    uv_close((uv_handle_t*)&baton->request, 0);
+}
+
+void CallbackResolver::invokeResolver(AsyncResolverBaton *baton)
+{
+    HandleScope scope;
+    Handle<Value> argv[] = { TagLibStringToString(baton->fileName) };
+    Local<Value> ret = baton->resolver->resolverFunc->Call(Context::GetCurrent()->Global(), 1, argv);
+    if (!ret->IsString()) {
+        baton->type = TagLib::String::null;
+    }
+    else {
+        baton->type = NodeStringToTagLibString(ret->ToString()).upper();
+    }
+}
+
+TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readAudioProperties, TagLib::AudioProperties::ReadStyle audioPropertiesStyle) const
+{
+    AsyncResolverBaton baton;
+    baton.request.data = (void *) &baton;
+    baton.resolver = this;
+    baton.fileName = fileName;
+
+#ifdef _WIN32
+    if (created_at != GetCurrentThreadId()) {
+#else
+    if (created_in != pthread_self()) {
+#endif
+        uv_async_init(uv_default_loop(), &baton.request, invokeResolverCb);
+        uv_mutex_init(&baton.mutex);
+
+        uv_mutex_lock(&baton.mutex);
+        uv_async_send(&baton.request);
+        uv_mutex_lock(&baton.mutex);
+    }
+    else {
+        invokeResolver(&baton);
+    }
+
+    TagLib::File *file = 0;
+    if (baton.type == "MPEG")
+        file = new TagLib::MPEG::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "OGG")
+        file = new TagLib::Ogg::Vorbis::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "OGG/FLAC")
+        file = new TagLib::Ogg::FLAC::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "FLAC")
+        file = new TagLib::FLAC::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "MPC")
+        file = new TagLib::MPC::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "WV")
+        file = new TagLib::WavPack::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "SPX")
+        file = new TagLib::Ogg::Speex::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "TTA")
+        file = new TagLib::TrueAudio::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "MP4")
+        file = new TagLib::MP4::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "ASF")
+        file = new TagLib::ASF::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "AIFF")
+        file = new TagLib::RIFF::AIFF::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "WAV")
+        file = new TagLib::RIFF::WAV::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "APE")
+        file = new TagLib::APE::File(fileName, readAudioProperties, audioPropertiesStyle);
+    // module, nst and wow are possible but uncommon baton.typeensions
+    else if (baton.type == "MOD")
+        file = new TagLib::Mod::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "S3M")
+        file = new TagLib::S3M::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "IT")
+        file = new TagLib::IT::File(fileName, readAudioProperties, audioPropertiesStyle);
+    else if (baton.type == "XM")
+        file = new TagLib::XM::File(fileName, readAudioProperties, audioPropertiesStyle);
+
+#ifdef _WIN32
+    if (created_at != GetCurrentThreadId()) {
+#else
+    if (created_in != pthread_self()) {
+#endif
+        uv_mutex_unlock(&baton.mutex);
+        uv_mutex_destroy(&baton.mutex);
+    }
+
+    return file;
+}
 }
 
 extern "C" {
@@ -187,6 +319,7 @@ init (Handle<Object> target)
 #endif
 
     NODE_SET_METHOD(target, "read", AsyncReadFile);
+    NODE_SET_METHOD(target, "addResolvers", AddResolvers);
     Tag::Initialize(target);
 }
 
