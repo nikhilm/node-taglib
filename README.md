@@ -6,8 +6,9 @@ node-taglib is a simple binding to
 
 It requires [node.js](http://nodejs.org).
 
-For now it exposes Tag and AudioProperties. Synchronous write support is
-supported for Tag.
+node-taglib offers only an abstract interface without giving access to extended
+file-specific attributes. It does allow custom resolvers though. Synchronous
+write support is supported for Tag.
 
 **NOTE: Asynchronous API requires use of TagLib [from git][taglib-git] since
 certain bugs present in the released v1.7 cause problems.**
@@ -139,6 +140,42 @@ Save any changes in the Tag meta-data to disk _synchronously_.
 ### Tag.isEmpty()
 
 Returns whether the tag is empty or not.
+
+### taglib.addResolvers([resolver1[, resolver2[, ...]]])
+
+Adds JavaScript functions that will be called to resolve the filetype of
+a file. Each resolver will be added to the front of the resolver queue. So the
+last resolver will be called first. Multiple calls to `addResolvers` are
+allowed.
+
+Each resolver must be a JavaScript function which takes a `filename` parameter
+and returns a `string`. The string must be one of (case-insensitive):
+
+    "MPEG"
+    "OGG"      - Ogg Vorbis
+    "OGG/FLAC" - Ogg FLAC
+    "FLAC"
+    "MPC"
+    "WV"
+    "SPX"      - Ogg Speex
+    "TTA"
+    "MP4"
+    "ASF"
+    "AIFF"     - RIFF AIFF
+    "WAV"      - RIFF WAV
+    "APE"
+    "MOD"
+    "S3M"
+    "IT"
+    "XM"
+
+These correspond directly to the [filetypes
+supported](http://developer.kde.org/~wheeler/taglib/api/classTagLib_1_1File.html)
+by TagLib.  If the filetype cannot be determined, return anything other than
+one of these literals.
+
+Asynchronous resolvers (which indicate the filetype via a callback rather than
+a return value) are not supported.
 
 ### taglib.WITH_ASF
 
