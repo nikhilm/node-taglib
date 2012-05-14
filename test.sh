@@ -1,4 +1,4 @@
 #!/bin/sh
-make
+make || exit 1
 npm link vows
-./node_modules/vows/bin/vows spec/taglibSpec.js spec/buffersSpec.js --spec
+./node_modules/vows/bin/vows --spec --isolate spec/taglibSpec.js spec/resolverSpec.js
