@@ -58,6 +58,7 @@ The `examples` show usage.
 ## API
 
 ### read(path, callback)
+### read(buffer, format, callback)
 
 The function you will most likely want to use. `callback` should have signature
 `callback(err, tag, audioProperties)` where `tag` and `audioProperties` are
@@ -89,6 +90,9 @@ integers:
 * channels
 
 Writing audio properties is not supported.
+
+In the second variant, which can read from a buffer, `format` should be
+a string as specified in [addResolvers](#addResolvers).
 
 ### tag(path, callback)
 
@@ -141,7 +145,7 @@ Save any changes in the Tag meta-data to disk _synchronously_.
 
 Returns whether the tag is empty or not.
 
-### taglib.addResolvers(\[resolver1\[, resolver2\[, ...]]])
+### taglib.addResolvers(\[resolver1\[, resolver2\[, ...]]]) {#addResolvers}
 
 Adds JavaScript functions that will be called to resolve the filetype of
 a file. Each resolver will be added to the front of the resolver queue. So the

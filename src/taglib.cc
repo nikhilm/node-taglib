@@ -9,6 +9,8 @@
 #include <string.h>
 
 #include <v8.h>
+#include <node_buffer.h>
+
 #include <asffile.h>
 #include <mpegfile.h>
 #include <vorbisfile.h>
@@ -29,6 +31,7 @@
 
 #include "audioproperties.h"
 #include "tag.h"
+#include "bufferstream.h"
 
 using namespace v8;
 using namespace node;
@@ -59,6 +62,30 @@ int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref) {
     return error;
 }
 
+int CreateFileRefFile(TagLib::File *file, TagLib::FileRef **ref) {
+    TagLib::FileRef *f = NULL;
+    int error = 0;
+    if (file == NULL) {
+        *ref = NULL;
+        return EBADF;
+    }
+
+    f = new TagLib::FileRef(file);
+
+    if (f->isNull() || !f->tag())
+    {
+        error = EINVAL;
+        delete f;
+    }
+
+    if (error != 0)
+        *ref = NULL;
+    else
+        *ref = f;
+
+    return error;
+}
+
 Handle<String> ErrorToString(int error) {
     HandleScope scope;
     std::string err;
@@ -72,6 +99,10 @@ Handle<String> ErrorToString(int error) {
             err = "Failed to extract tags";
             break;
 
+        case EBADF:
+            err = "Unknown file format (check format string)";
+            break;
+
         default:
             err = "Unknown error";
             break;
@@ -83,20 +114,42 @@ Handle<String> ErrorToString(int error) {
 v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
     HandleScope scope;
 
-    if (args.Length() < 1 || !args[0]->IsString())
-        return ThrowException(String::New("Expected string 'path' as first argument"));
+    if (args.Length() < 1) {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
 
-    String::Utf8Value path(args[0]->ToString());
+    if (args[0]->IsString()) {
+        if (args.Length() < 2 || !args[1]->IsFunction())
+            return ThrowException(String::New("Expected callback function as second argument"));
 
-    if (args.Length() < 2 || !args[1]->IsFunction())
-        return ThrowException(String::New("Expected callback function as second argument"));
-
-    Local<Function> callback = Local<Function>::Cast(args[1]);
+    }
+    else if (Buffer::HasInstance(args[0])) {
+        if (args.Length() < 2 || !args[1]->IsString())
+            return ThrowException(String::New("Expected string 'format' as second argument"));
+        if (args.Length() < 3 || !args[2]->IsFunction())
+            return ThrowException(String::New("Expected callback function as third argument"));
+    }
+    else {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
 
     AsyncBaton *baton = new AsyncBaton;
+    baton->path = 0;
+    baton->format = TagLib::String::null;
+    baton->stream = 0;
+
     baton->request.data = baton;
-    baton->path = strdup(*path);
-    baton->callback = Persistent<Function>::New(callback);
+    if (args[0]->IsString()) {
+        String::Utf8Value path(args[0]->ToString());
+        baton->path = strdup(*path);
+        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+
+    }
+    else {
+        baton->format = NodeStringToTagLibString(args[1]->ToString());
+        baton->stream = new BufferStream(args[0]->ToObject());
+        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+    }
     baton->error = 0;
 
     uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, AsyncReadFileAfter);
@@ -108,9 +161,52 @@ void AsyncReadFileDo(uv_work_t *req) {
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     TagLib::FileRef *f;
-    int error;
 
-    baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
+    if (baton->path) {
+        baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
+    }
+    else {
+        assert(baton->stream);
+        TagLib::File *file = 0;
+        baton->format = baton->format.upper();
+        if (baton->format == "MPEG")
+            file = new TagLib::MPEG::File(baton->stream, TagLib::ID3v2::FrameFactory::instance());
+        else if (baton->format == "OGG")
+            file = new TagLib::Ogg::Vorbis::File(baton->stream);
+        else if (baton->format == "OGG/FLAC")
+            file = new TagLib::Ogg::FLAC::File(baton->stream);
+        else if (baton->format == "FLAC")
+            file = new TagLib::FLAC::File(baton->stream, TagLib::ID3v2::FrameFactory::instance());
+        else if (baton->format == "MPC")
+            file = new TagLib::MPC::File(baton->stream);
+        else if (baton->format == "WV")
+            file = new TagLib::WavPack::File(baton->stream);
+        else if (baton->format == "SPX")
+            file = new TagLib::Ogg::Speex::File(baton->stream);
+        else if (baton->format == "TTA")
+            file = new TagLib::TrueAudio::File(baton->stream);
+        else if (baton->format == "MP4")
+            file = new TagLib::MP4::File(baton->stream);
+        else if (baton->format == "ASF")
+            file = new TagLib::ASF::File(baton->stream);
+        else if (baton->format == "AIFF")
+            file = new TagLib::RIFF::AIFF::File(baton->stream);
+        else if (baton->format == "WAV")
+            file = new TagLib::RIFF::WAV::File(baton->stream);
+        else if (baton->format == "APE")
+            file = new TagLib::APE::File(baton->stream);
+        // module, nst and wow are possible but uncommon baton->formatensions
+        else if (baton->format == "MOD")
+            file = new TagLib::Mod::File(baton->stream);
+        else if (baton->format == "S3M")
+            file = new TagLib::S3M::File(baton->stream);
+        else if (baton->format == "IT")
+            file = new TagLib::IT::File(baton->stream);
+        else if (baton->format == "XM")
+            file = new TagLib::XM::File(baton->stream);
+
+        baton->error = node_taglib::CreateFileRefFile(file, &f);
+    }
 
     if (baton->error == 0) {
         baton->fileRef = f;

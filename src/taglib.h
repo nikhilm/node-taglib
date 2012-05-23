@@ -8,8 +8,10 @@
 
 namespace node_taglib {
 class Tag;
+class BufferStream;
 
 int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref);
+int CreateFileRefFile(TagLib::File *file, TagLib::FileRef **ref);
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
@@ -23,7 +25,14 @@ struct AsyncBaton {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
     int error;
+
     TagLib::FileName path; /* only used by read/tag, not save */
+    // OR
+    TagLib::String format;
+    BufferStream *stream; // File takes over ownership of the stream
+                          // and FileRef takes over ownership of the File
+                          // so don't do BufferStream deletion
+
     TagLib::FileRef *fileRef; /* only used by taglib.read */
     Tag *tag; /* only used by taglib.tag */
 };
