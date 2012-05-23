@@ -13,7 +13,7 @@ def configure(conf):
   conf.check_tool("compiler_cxx")
   conf.check_tool("node_addon")
 
-  conf.check_cfg(package='taglib', args='--cflags --libs',
+  conf.check_cfg(path='taglib-config', package='', args='--cflags --libs',
   uselib_store='TAGLIB')
 
 def post_build(ctx):
