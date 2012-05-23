@@ -35,7 +35,7 @@ using namespace node;
 using namespace node_taglib;
 
 namespace node_taglib {
-int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
+int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref) {
     TagLib::FileRef *f = NULL;
     int error = 0;
     if (!TagLib::File::isReadable(path)) {
@@ -110,7 +110,7 @@ void AsyncReadFileDo(uv_work_t *req) {
     TagLib::FileRef *f;
     int error;
 
-    baton->error = node_taglib::CreateFileRef(baton->path, &f);
+    baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
 
     if (baton->error == 0) {
         baton->fileRef = f;

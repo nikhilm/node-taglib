@@ -152,7 +152,7 @@ Handle<Value> Tag::SyncTag(const Arguments &args) {
 
     TagLib::FileRef *f;
     int error;
-    if ((error = node_taglib::CreateFileRef(*path, &f)) != 0) {
+    if ((error = node_taglib::CreateFileRefPath(*path, &f)) != 0) {
         Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
         return ThrowException(String::Concat(fn, ErrorToString(error)));
     }
@@ -195,7 +195,7 @@ void Tag::AsyncTagRead(uv_work_t *req) {
     TagLib::FileRef *f;
     int error;
 
-    baton->error = node_taglib::CreateFileRef(baton->path, &f);
+    baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
 
     if (baton->error == 0) {
         baton->tag = new Tag(f);

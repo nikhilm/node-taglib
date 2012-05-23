@@ -9,7 +9,7 @@
 namespace node_taglib {
 class Tag;
 
-int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref);
+int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref);
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
