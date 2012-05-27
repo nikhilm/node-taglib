@@ -10,8 +10,13 @@ namespace node_taglib {
 class Tag;
 class BufferStream;
 
+/**
+ * Note: This uses TagLib's internal file type resolvers
+ * use CreateFileRef with a FileStream if the format is known
+ */
 int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref);
-int CreateFileRefFile(TagLib::File *file, TagLib::FileRef **ref);
+int CreateFileRef(TagLib::IOStream *stream, TagLib::String format, TagLib::FileRef **ref);
+static TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );

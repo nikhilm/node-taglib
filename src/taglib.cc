@@ -11,6 +11,7 @@
 #include <v8.h>
 #include <node_buffer.h>
 
+#include <tfilestream.h>
 #include <asffile.h>
 #include <mpegfile.h>
 #include <vorbisfile.h>
@@ -62,9 +63,11 @@ int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref) {
     return error;
 }
 
-int CreateFileRefFile(TagLib::File *file, TagLib::FileRef **ref) {
+int CreateFileRef(TagLib::IOStream *stream, TagLib::String format, TagLib::FileRef **ref) {
     TagLib::FileRef *f = NULL;
     int error = 0;
+
+    TagLib::File *file = createFile(stream, format);
     if (file == NULL) {
         *ref = NULL;
         return EBADF;
@@ -84,6 +87,47 @@ int CreateFileRefFile(TagLib::File *file, TagLib::FileRef **ref) {
         *ref = f;
 
     return error;
+}
+
+TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format) {
+    TagLib::File *file = 0;
+    format = format.upper();
+    if (format == "MPEG")
+        file = new TagLib::MPEG::File(stream, TagLib::ID3v2::FrameFactory::instance());
+    else if (format == "OGG")
+        file = new TagLib::Ogg::Vorbis::File(stream);
+    else if (format == "OGG/FLAC")
+        file = new TagLib::Ogg::FLAC::File(stream);
+    else if (format == "FLAC")
+        file = new TagLib::FLAC::File(stream, TagLib::ID3v2::FrameFactory::instance());
+    else if (format == "MPC")
+        file = new TagLib::MPC::File(stream);
+    else if (format == "WV")
+        file = new TagLib::WavPack::File(stream);
+    else if (format == "SPX")
+        file = new TagLib::Ogg::Speex::File(stream);
+    else if (format == "TTA")
+        file = new TagLib::TrueAudio::File(stream);
+    else if (format == "MP4")
+        file = new TagLib::MP4::File(stream);
+    else if (format == "ASF")
+        file = new TagLib::ASF::File(stream);
+    else if (format == "AIFF")
+        file = new TagLib::RIFF::AIFF::File(stream);
+    else if (format == "WAV")
+        file = new TagLib::RIFF::WAV::File(stream);
+    else if (format == "APE")
+        file = new TagLib::APE::File(stream);
+    // module, nst and wow are possible but uncommon formatensions
+    else if (format == "MOD")
+        file = new TagLib::Mod::File(stream);
+    else if (format == "S3M")
+        file = new TagLib::S3M::File(stream);
+    else if (format == "IT")
+        file = new TagLib::IT::File(stream);
+    else if (format == "XM")
+        file = new TagLib::XM::File(stream);
+    return file;
 }
 
 Handle<String> ErrorToString(int error) {
@@ -167,45 +211,7 @@ void AsyncReadFileDo(uv_work_t *req) {
     }
     else {
         assert(baton->stream);
-        TagLib::File *file = 0;
-        baton->format = baton->format.upper();
-        if (baton->format == "MPEG")
-            file = new TagLib::MPEG::File(baton->stream, TagLib::ID3v2::FrameFactory::instance());
-        else if (baton->format == "OGG")
-            file = new TagLib::Ogg::Vorbis::File(baton->stream);
-        else if (baton->format == "OGG/FLAC")
-            file = new TagLib::Ogg::FLAC::File(baton->stream);
-        else if (baton->format == "FLAC")
-            file = new TagLib::FLAC::File(baton->stream, TagLib::ID3v2::FrameFactory::instance());
-        else if (baton->format == "MPC")
-            file = new TagLib::MPC::File(baton->stream);
-        else if (baton->format == "WV")
-            file = new TagLib::WavPack::File(baton->stream);
-        else if (baton->format == "SPX")
-            file = new TagLib::Ogg::Speex::File(baton->stream);
-        else if (baton->format == "TTA")
-            file = new TagLib::TrueAudio::File(baton->stream);
-        else if (baton->format == "MP4")
-            file = new TagLib::MP4::File(baton->stream);
-        else if (baton->format == "ASF")
-            file = new TagLib::ASF::File(baton->stream);
-        else if (baton->format == "AIFF")
-            file = new TagLib::RIFF::AIFF::File(baton->stream);
-        else if (baton->format == "WAV")
-            file = new TagLib::RIFF::WAV::File(baton->stream);
-        else if (baton->format == "APE")
-            file = new TagLib::APE::File(baton->stream);
-        // module, nst and wow are possible but uncommon baton->formatensions
-        else if (baton->format == "MOD")
-            file = new TagLib::Mod::File(baton->stream);
-        else if (baton->format == "S3M")
-            file = new TagLib::S3M::File(baton->stream);
-        else if (baton->format == "IT")
-            file = new TagLib::IT::File(baton->stream);
-        else if (baton->format == "XM")
-            file = new TagLib::XM::File(baton->stream);
-
-        baton->error = node_taglib::CreateFileRefFile(file, &f);
+        baton->error = node_taglib::CreateFileRef(baton->stream, baton->format, &f);
     }
 
     if (baton->error == 0) {
@@ -345,42 +351,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
         invokeResolver(&baton);
     }
 
-    TagLib::File *file = 0;
-    if (baton.type == "MPEG")
-        file = new TagLib::MPEG::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "OGG")
-        file = new TagLib::Ogg::Vorbis::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "OGG/FLAC")
-        file = new TagLib::Ogg::FLAC::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "FLAC")
-        file = new TagLib::FLAC::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "MPC")
-        file = new TagLib::MPC::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "WV")
-        file = new TagLib::WavPack::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "SPX")
-        file = new TagLib::Ogg::Speex::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "TTA")
-        file = new TagLib::TrueAudio::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "MP4")
-        file = new TagLib::MP4::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "ASF")
-        file = new TagLib::ASF::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "AIFF")
-        file = new TagLib::RIFF::AIFF::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "WAV")
-        file = new TagLib::RIFF::WAV::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "APE")
-        file = new TagLib::APE::File(fileName, readAudioProperties, audioPropertiesStyle);
-    // module, nst and wow are possible but uncommon baton.typeensions
-    else if (baton.type == "MOD")
-        file = new TagLib::Mod::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "S3M")
-        file = new TagLib::S3M::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "IT")
-        file = new TagLib::IT::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "XM")
-        file = new TagLib::XM::File(fileName, readAudioProperties, audioPropertiesStyle);
+    TagLib::FileStream *stream = new TagLib::FileStream(fileName);
 
 #ifdef _WIN32
     if (created_at != GetCurrentThreadId()) {
@@ -391,7 +362,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
         uv_mutex_destroy(&baton.mutex);
     }
 
-    return file;
+    return node_taglib::createFile(stream, baton.type);
 }
 }
 
