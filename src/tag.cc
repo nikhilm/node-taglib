@@ -225,12 +225,12 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
         baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
     }
 
-    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagRead, Tag::AsyncTagReadAfter);
+    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagReadDo, Tag::AsyncTagReadAfter);
 
     return Undefined();
 }
 
-void Tag::AsyncTagRead(uv_work_t *req) {
+void Tag::AsyncTagReadDo(uv_work_t *req) {
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     TagLib::FileRef *f;
