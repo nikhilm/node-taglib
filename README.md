@@ -92,7 +92,7 @@ integers:
 Writing audio properties is not supported.
 
 In the second variant, which can read from a buffer, `format` should be
-a string as specified in [addResolvers](#addResolvers).
+a string as specified in [Formats](#formats).
 
 ### tag(path, callback)
 
@@ -104,9 +104,13 @@ integer error code (`errno.h`) and field `message` will have a string
 representation.
 
 ### tagSync(path)
+### tagSync(buffer, format)
 
-Read the tag from the file at `path` _synchronously_. Returns a `Tag`. If
+Read the tags from the file at `path` _synchronously_. Returns a `Tag`. If
 errors occurred, throws an exception.
+
+Read the tags from `buffer` assuming that it is a `format` file. See
+[Formats](#formats)
 
 ### Tag
 
@@ -145,7 +149,7 @@ Save any changes in the Tag meta-data to disk _synchronously_.
 
 Returns whether the tag is empty or not.
 
-### taglib.addResolvers(\[resolver1\[, resolver2\[, ...]]]) {#addResolvers}
+### taglib.addResolvers(\[resolver1\[, resolver2\[, ...]]])
 
 Adds JavaScript functions that will be called to resolve the filetype of
 a file. Each resolver will be added to the front of the resolver queue. So the
@@ -153,7 +157,12 @@ last resolver will be called first. Multiple calls to `addResolvers` are
 allowed.
 
 Each resolver must be a JavaScript function which takes a `filename` parameter
-and returns a format `string`. The string must be one of (case-insensitive):
+and returns a format `string`. List of [formats](#formats).
+
+### Formats {#formats}
+
+Any place where `node-taglib` expects a format can be passed on of these
+(case-insensitive):
 
     "MPEG"
     "OGG"      - Ogg Vorbis

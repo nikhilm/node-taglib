@@ -1,9 +1,12 @@
+#include "tag.h"
+
 #include <errno.h>
 #include <string.h>
 
-#include "tag.h"
+#include <node_buffer.h>
 
 #include "taglib.h"
+#include "bufferstream.h"
 
 using namespace node_taglib;
 using namespace v8;
@@ -145,16 +148,26 @@ Handle<Value> Tag::SyncSaveTag(const Arguments &args) {
 Handle<Value> Tag::SyncTag(const Arguments &args) {
     HandleScope scope;
 
-    if (args.Length() < 1 || !args[0]->IsString())
-        return ThrowException(String::New("Expected string 'path' as first argument"));
+    TagLib::FileRef *f = 0;
+    int error = 0;
 
-    String::Utf8Value path(args[0]->ToString());
+    if (args.Length() >= 1 && args[0]->IsString()) {
+        String::Utf8Value path(args[0]->ToString());
+        if (error = CreateFileRefPath(*path, &f)) {
+            Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
+            return ThrowException(String::Concat(fn, ErrorToString(error)));
+        }
+    }
+    else if (args.Length() >= 1 && Buffer::HasInstance(args[0])) {
+        if (args.Length() < 2 || !args[1]->IsString())
+            return ThrowException(String::New("Expected string 'format' as second argument"));
 
-    TagLib::FileRef *f;
-    int error;
-    if ((error = node_taglib::CreateFileRefPath(*path, &f)) != 0) {
-        Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
-        return ThrowException(String::Concat(fn, ErrorToString(error)));
+        if (error = CreateFileRef(new BufferStream(args[0]->ToObject()), NodeStringToTagLibString(args[1]->ToString()), &f)) {
+            return ThrowException(ErrorToString(error));
+        }
+    }
+    else {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
     }
 
     Tag * tag = new Tag(f);
