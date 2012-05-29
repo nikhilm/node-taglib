@@ -63,4 +63,41 @@ vows.describe('taglib bindings: Buffers')
       }
     },
   },
+
+  'reading data from a buffer with unknown format': {
+    topic: function() {
+      var buf = fs.readFileSync(__dirname+'/sample.mp3');
+      Taglib.read(buf, '', this.callback);
+    },
+
+    'should raise an error': function(err, _, _) {
+      assert.isNotNull(err);
+      assert.match(err.message, /Unknown file format/);
+    }
+  },
+
+  'reading data from a buffer with wrong format': {
+    topic: function() {
+      var buf = fs.readFileSync(__dirname+'/sample.mp3');
+      Taglib.read(buf, 'ogg', this.callback);
+    },
+
+    'should raise an error': function(err, _, _) {
+      assert.isNotNull(err);
+      assert.match(err.message, /Failed to extract tags/);
+    }
+  },
+
+  'reading data from empty buffer': {
+    topic: function() {
+      var buf = new Buffer(0);
+      Taglib.read(buf, 'mpeg', this.callback);
+    },
+
+    'should lead to empty tags and properties': function(err, tag, prop) {
+      assert.isNull(err);
+      assert.isEmpty(tag);
+      assert.isObject(prop);
+    }
+  }
 }).export(module);
