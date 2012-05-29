@@ -1,3 +1,12 @@
+2012.05.29, v0.5.0
+
+* Added read support for Buffers.
+* Added support for filename based resolvers.
+* Added read() call to immediately close file. This should now be the standard
+  way to use node-taglib.
+* Removed AudioProperties. Use read().
+* Significant internal changes and code cleanup.
+
 2012.04.05, v0.3.1
 
 * Fix bug in npm package where a build cache was included in the package.
