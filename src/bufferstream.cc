@@ -22,7 +22,9 @@ BufferStream::~BufferStream()
 }
 
 TagLib::ByteVector BufferStream::readBlock(TagLib::ulong length) {
-    return TagLib::ByteVector(m_data, m_length).mid(m_offset, length);
+    long start = m_offset;
+    m_offset += length;
+    return TagLib::ByteVector(m_data, m_length).mid(start, length);
 }
 
 void BufferStream::writeBlock(const TagLib::ByteVector &data) {
@@ -54,8 +56,6 @@ void BufferStream::seek(long offset, TagLib::IOStream::Position p) {
 }
 
 void BufferStream::clear() {
-    fprintf(stderr, "clear called aborting\n");
-    abort();
 }
 
 long BufferStream::tell() const {
@@ -67,7 +67,7 @@ long BufferStream::length() {
 }
 
 void BufferStream::truncate(long length) {
-    fprintf(stderr, "truncaled called aborting\n");
+    fprintf(stderr, "truncate called aborting\n");
     abort();
 }
 }
