@@ -52,7 +52,6 @@ void BufferStream::seek(long offset, TagLib::IOStream::Position p) {
     else if (p == TagLib::IOStream::End) {
         m_offset = length() + offset;
     }
-    assert(m_offset >= 0);
 }
 
 void BufferStream::clear() {
