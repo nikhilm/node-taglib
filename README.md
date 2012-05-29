@@ -143,7 +143,8 @@ will be `null` if the save was successful, otherwise it will be an object with
 
 ### Tag.saveSync()
 
-Save any changes in the Tag meta-data to disk _synchronously_.
+Save any changes in the Tag meta-data to disk _synchronously_. Throws an
+exception if the save failed.
 
 ### Tag.isEmpty()
 

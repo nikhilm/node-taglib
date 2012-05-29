@@ -163,5 +163,20 @@ vows.describe('taglib bindings: Buffers')
     'should lead to empty tags': function(tag) {
       assert.isObject(tag);
     }
+  },
+
+  'writing to a tag from a buffer': {
+    topic: function() {
+      return function() {
+        var buf = fs.readFileSync(__dirname+'/sample.mp3');
+        var tag = Taglib.tagSync(buf, 'mpeg');
+        tag.artist = 'nsm';
+        tag.saveSync();
+      }
+    },
+
+    'should fail': function(topic) {
+      assert.throws(topic);
+    }
   }
 }).export(module);

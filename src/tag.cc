@@ -142,7 +142,14 @@ Handle<Value> Tag::SyncSaveTag(const Arguments &args) {
   HandleScope scope;
   Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
   assert(t->fileRef);
-  return Boolean::New(t->fileRef->save());
+  bool success = t->fileRef->save();
+  if (success)
+      return Undefined();
+  else
+      return ThrowException(String::Concat(
+                String::New("Failed to save file: "),
+                String::New(t->fileRef->file()->name())
+            ));
 }
 
 Handle<Value> Tag::SyncTag(const Arguments &args) {
