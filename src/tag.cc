@@ -187,22 +187,43 @@ Handle<Value> Tag::SyncTag(const Arguments &args) {
 v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
     HandleScope scope;
 
-    if (args.Length() < 1 || !args[0]->IsString())
-        return ThrowException(String::New("Expected string 'path' as first argument"));
+    if (args.Length() < 1) {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
 
-    String::Utf8Value path(args[0]->ToString());
+    if (args[0]->IsString()) {
+        if (args.Length() < 2 || !args[1]->IsFunction())
+            return ThrowException(String::New("Expected callback function as second argument"));
 
-    if (args.Length() < 2 || !args[1]->IsFunction())
-        return ThrowException(String::New("Expected callback function as second argument"));
+    }
+    else if (Buffer::HasInstance(args[0])) {
+        if (args.Length() < 2 || !args[1]->IsString())
+            return ThrowException(String::New("Expected string 'format' as second argument"));
+        if (args.Length() < 3 || !args[2]->IsFunction())
+            return ThrowException(String::New("Expected callback function as third argument"));
+    }
+    else {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
 
-    Local<Function> callback = Local<Function>::Cast(args[1]);
 
     AsyncBaton *baton = new AsyncBaton;
     baton->request.data = baton;
-    baton->path = strdup(*path);
+    baton->path = 0;
     baton->tag = NULL;
-    baton->callback = Persistent<Function>::New(callback);
     baton->error = 0;
+
+    if (args[0]->IsString()) {
+        String::Utf8Value path(args[0]->ToString());
+        baton->path = strdup(*path);
+        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+
+    }
+    else {
+        baton->format = NodeStringToTagLibString(args[1]->ToString());
+        baton->stream = new BufferStream(args[0]->ToObject());
+        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+    }
 
     uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagRead, Tag::AsyncTagReadAfter);
 
@@ -213,9 +234,14 @@ void Tag::AsyncTagRead(uv_work_t *req) {
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     TagLib::FileRef *f;
-    int error;
 
-    baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
+    if (baton->path) {
+        baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
+    }
+    else {
+        assert(baton->stream);
+        baton->error = node_taglib::CreateFileRef(baton->stream, baton->format, &f);
+    }
 
     if (baton->error == 0) {
         baton->tag = new Tag(f);

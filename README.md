@@ -95,6 +95,7 @@ In the second variant, which can read from a buffer, `format` should be
 a string as specified in [Formats](#formats).
 
 ### tag(path, callback)
+### tag(buffer, format, callback)
 
 Read the tag from the file at `path` _asynchronously_. The callback should have
 signature `(err, tag)`. On success, `err` will be `null` and `tag` will be
@@ -102,6 +103,9 @@ a `Tag`. If errors occurred, `err` will contain the error and
 `tag` will be `null`. `err` will be an object with field `code` having the
 integer error code (`errno.h`) and field `message` will have a string
 representation.
+
+In the second variant, which can read from a buffer, `format` should be
+a string as specified in [Formats](#formats).
 
 ### tagSync(path)
 ### tagSync(buffer, format)

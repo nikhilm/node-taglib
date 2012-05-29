@@ -178,11 +178,12 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
     }
 
     AsyncBaton *baton = new AsyncBaton;
+    baton->request.data = baton;
     baton->path = 0;
     baton->format = TagLib::String::null;
     baton->stream = 0;
+    baton->error = 0;
 
-    baton->request.data = baton;
     if (args[0]->IsString()) {
         String::Utf8Value path(args[0]->ToString());
         baton->path = strdup(*path);
@@ -194,7 +195,6 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
         baton->stream = new BufferStream(args[0]->ToObject());
         baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
     }
-    baton->error = 0;
 
     uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, AsyncReadFileAfter);
 
