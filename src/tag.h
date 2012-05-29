@@ -2,7 +2,6 @@
 #define NODE_TAGLIB_TAG_H
 
 #include <fileref.h>
-#include <tag.h>
 #include <node.h>
 #include <sys/time.h>
 

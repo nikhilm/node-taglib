@@ -58,6 +58,7 @@ The `examples` show usage.
 ## API
 
 ### read(path, callback)
+### read(buffer, format, callback)
 
 The function you will most likely want to use. `callback` should have signature
 `callback(err, tag, audioProperties)` where `tag` and `audioProperties` are
@@ -90,7 +91,11 @@ integers:
 
 Writing audio properties is not supported.
 
+In the second variant, which can read from a buffer, `format` should be
+a string as specified in [Formats](#formats).
+
 ### tag(path, callback)
+### tag(buffer, format, callback)
 
 Read the tag from the file at `path` _asynchronously_. The callback should have
 signature `(err, tag)`. On success, `err` will be `null` and `tag` will be
@@ -99,10 +104,17 @@ a `Tag`. If errors occurred, `err` will contain the error and
 integer error code (`errno.h`) and field `message` will have a string
 representation.
 
-### tagSync(path)
+In the second variant, which can read from a buffer, `format` should be
+a string as specified in [Formats](#formats).
 
-Read the tag from the file at `path` _synchronously_. Returns a `Tag`. If
+### tagSync(path)
+### tagSync(buffer, format)
+
+Read the tags from the file at `path` _synchronously_. Returns a `Tag`. If
 errors occurred, throws an exception.
+
+Read the tags from `buffer` assuming that it is a `format` file. See
+[Formats](#formats)
 
 ### Tag
 
@@ -135,7 +147,8 @@ will be `null` if the save was successful, otherwise it will be an object with
 
 ### Tag.saveSync()
 
-Save any changes in the Tag meta-data to disk _synchronously_.
+Save any changes in the Tag meta-data to disk _synchronously_. Throws an
+exception if the save failed.
 
 ### Tag.isEmpty()
 
@@ -149,7 +162,12 @@ last resolver will be called first. Multiple calls to `addResolvers` are
 allowed.
 
 Each resolver must be a JavaScript function which takes a `filename` parameter
-and returns a format `string`. The string must be one of (case-insensitive):
+and returns a format `string`. List of [formats](#formats).
+
+### Formats {#formats}
+
+Any place where `node-taglib` expects a format can be passed on of these
+(case-insensitive):
 
     "MPEG"
     "OGG"      - Ogg Vorbis

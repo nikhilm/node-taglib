@@ -9,6 +9,9 @@
 #include <string.h>
 
 #include <v8.h>
+#include <node_buffer.h>
+
+#include <tfilestream.h>
 #include <asffile.h>
 #include <mpegfile.h>
 #include <vorbisfile.h>
@@ -29,13 +32,14 @@
 
 #include "audioproperties.h"
 #include "tag.h"
+#include "bufferstream.h"
 
 using namespace v8;
 using namespace node;
 using namespace node_taglib;
 
 namespace node_taglib {
-int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
+int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref) {
     TagLib::FileRef *f = NULL;
     int error = 0;
     if (!TagLib::File::isReadable(path)) {
@@ -59,6 +63,73 @@ int CreateFileRef(TagLib::FileName path, TagLib::FileRef **ref) {
     return error;
 }
 
+int CreateFileRef(TagLib::IOStream *stream, TagLib::String format, TagLib::FileRef **ref) {
+    TagLib::FileRef *f = NULL;
+    int error = 0;
+
+    TagLib::File *file = createFile(stream, format);
+    if (file == NULL) {
+        *ref = NULL;
+        return EBADF;
+    }
+
+    f = new TagLib::FileRef(file);
+
+    if (f->isNull() || !f->tag())
+    {
+        error = EINVAL;
+        delete f;
+    }
+
+    if (error != 0)
+        *ref = NULL;
+    else
+        *ref = f;
+
+    return error;
+}
+
+TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format) {
+    TagLib::File *file = 0;
+    format = format.upper();
+    if (format == "MPEG")
+        file = new TagLib::MPEG::File(stream, TagLib::ID3v2::FrameFactory::instance());
+    else if (format == "OGG")
+        file = new TagLib::Ogg::Vorbis::File(stream);
+    else if (format == "OGG/FLAC")
+        file = new TagLib::Ogg::FLAC::File(stream);
+    else if (format == "FLAC")
+        file = new TagLib::FLAC::File(stream, TagLib::ID3v2::FrameFactory::instance());
+    else if (format == "MPC")
+        file = new TagLib::MPC::File(stream);
+    else if (format == "WV")
+        file = new TagLib::WavPack::File(stream);
+    else if (format == "SPX")
+        file = new TagLib::Ogg::Speex::File(stream);
+    else if (format == "TTA")
+        file = new TagLib::TrueAudio::File(stream);
+    else if (format == "MP4")
+        file = new TagLib::MP4::File(stream);
+    else if (format == "ASF")
+        file = new TagLib::ASF::File(stream);
+    else if (format == "AIFF")
+        file = new TagLib::RIFF::AIFF::File(stream);
+    else if (format == "WAV")
+        file = new TagLib::RIFF::WAV::File(stream);
+    else if (format == "APE")
+        file = new TagLib::APE::File(stream);
+    // module, nst and wow are possible but uncommon formatensions
+    else if (format == "MOD")
+        file = new TagLib::Mod::File(stream);
+    else if (format == "S3M")
+        file = new TagLib::S3M::File(stream);
+    else if (format == "IT")
+        file = new TagLib::IT::File(stream);
+    else if (format == "XM")
+        file = new TagLib::XM::File(stream);
+    return file;
+}
+
 Handle<String> ErrorToString(int error) {
     HandleScope scope;
     std::string err;
@@ -72,6 +143,10 @@ Handle<String> ErrorToString(int error) {
             err = "Failed to extract tags";
             break;
 
+        case EBADF:
+            err = "Unknown file format (check format string)";
+            break;
+
         default:
             err = "Unknown error";
             break;
@@ -83,21 +158,43 @@ Handle<String> ErrorToString(int error) {
 v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
     HandleScope scope;
 
-    if (args.Length() < 1 || !args[0]->IsString())
-        return ThrowException(String::New("Expected string 'path' as first argument"));
+    if (args.Length() < 1) {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
 
-    String::Utf8Value path(args[0]->ToString());
+    if (args[0]->IsString()) {
+        if (args.Length() < 2 || !args[1]->IsFunction())
+            return ThrowException(String::New("Expected callback function as second argument"));
 
-    if (args.Length() < 2 || !args[1]->IsFunction())
-        return ThrowException(String::New("Expected callback function as second argument"));
-
-    Local<Function> callback = Local<Function>::Cast(args[1]);
+    }
+    else if (Buffer::HasInstance(args[0])) {
+        if (args.Length() < 2 || !args[1]->IsString())
+            return ThrowException(String::New("Expected string 'format' as second argument"));
+        if (args.Length() < 3 || !args[2]->IsFunction())
+            return ThrowException(String::New("Expected callback function as third argument"));
+    }
+    else {
+        return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
 
     AsyncBaton *baton = new AsyncBaton;
     baton->request.data = baton;
-    baton->path = strdup(*path);
-    baton->callback = Persistent<Function>::New(callback);
+    baton->path = 0;
+    baton->format = TagLib::String::null;
+    baton->stream = 0;
     baton->error = 0;
+
+    if (args[0]->IsString()) {
+        String::Utf8Value path(args[0]->ToString());
+        baton->path = strdup(*path);
+        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+
+    }
+    else {
+        baton->format = NodeStringToTagLibString(args[1]->ToString());
+        baton->stream = new BufferStream(args[0]->ToObject());
+        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+    }
 
     uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, AsyncReadFileAfter);
 
@@ -108,9 +205,14 @@ void AsyncReadFileDo(uv_work_t *req) {
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
     TagLib::FileRef *f;
-    int error;
 
-    baton->error = node_taglib::CreateFileRef(baton->path, &f);
+    if (baton->path) {
+        baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
+    }
+    else {
+        assert(baton->stream);
+        baton->error = node_taglib::CreateFileRef(baton->stream, baton->format, &f);
+    }
 
     if (baton->error == 0) {
         baton->fileRef = f;
@@ -249,42 +351,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
         invokeResolver(&baton);
     }
 
-    TagLib::File *file = 0;
-    if (baton.type == "MPEG")
-        file = new TagLib::MPEG::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "OGG")
-        file = new TagLib::Ogg::Vorbis::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "OGG/FLAC")
-        file = new TagLib::Ogg::FLAC::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "FLAC")
-        file = new TagLib::FLAC::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "MPC")
-        file = new TagLib::MPC::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "WV")
-        file = new TagLib::WavPack::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "SPX")
-        file = new TagLib::Ogg::Speex::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "TTA")
-        file = new TagLib::TrueAudio::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "MP4")
-        file = new TagLib::MP4::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "ASF")
-        file = new TagLib::ASF::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "AIFF")
-        file = new TagLib::RIFF::AIFF::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "WAV")
-        file = new TagLib::RIFF::WAV::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "APE")
-        file = new TagLib::APE::File(fileName, readAudioProperties, audioPropertiesStyle);
-    // module, nst and wow are possible but uncommon baton.typeensions
-    else if (baton.type == "MOD")
-        file = new TagLib::Mod::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "S3M")
-        file = new TagLib::S3M::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "IT")
-        file = new TagLib::IT::File(fileName, readAudioProperties, audioPropertiesStyle);
-    else if (baton.type == "XM")
-        file = new TagLib::XM::File(fileName, readAudioProperties, audioPropertiesStyle);
+    TagLib::FileStream *stream = new TagLib::FileStream(fileName);
 
 #ifdef _WIN32
     if (created_at != GetCurrentThreadId()) {
@@ -295,7 +362,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
         uv_mutex_destroy(&baton.mutex);
     }
 
-    return file;
+    return node_taglib::createFile(stream, baton.type);
 }
 }
 
