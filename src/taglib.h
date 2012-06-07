@@ -4,6 +4,7 @@
 #include <fileref.h>
 #include <tag.h>
 #include <node.h>
+#include <uv.h>
 #include <sys/time.h>
 
 namespace node_taglib {
