@@ -1,7 +1,7 @@
 {
   "name": "taglib",
   "description": "Simple bindings to TagLib",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/nikhilm/node-taglib.git"
@@ -20,6 +20,6 @@
     "test": "vows"
   },
   "engines": {
-    "node": ">= 0.4.10"
+    "node": ">= 0.6.1"
   }
 }

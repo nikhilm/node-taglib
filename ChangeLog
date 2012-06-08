@@ -1,3 +1,12 @@
+2012.06.08, v0.6.0
+
+* This release is due to a major issue with compiling node-taglib and minimum
+  node version required. (Thanks to Emil Sedgh for reporting this.)
+* Minimum node version required bumped up to v0.6.1
+* Resolver support is only compiled if node version >= v0.7.0 since libuv
+  supports mutexes and threads only from 0.7.0 onwards
+* Fix Mac/FreeBSD nested mutex bug.
+
 2012.05.29, v0.5.0
 
 * Added read support for Buffers.
