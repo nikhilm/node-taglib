@@ -337,7 +337,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
     baton.fileName = fileName;
 
 #ifdef _WIN32
-    if (created_at != GetCurrentThreadId()) {
+    if (created_in != GetCurrentThreadId()) {
 #else
     if (created_in != pthread_self()) {
 #endif
@@ -355,7 +355,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
     TagLib::FileStream *stream = new TagLib::FileStream(fileName);
 
 #ifdef _WIN32
-    if (created_at != GetCurrentThreadId()) {
+    if (created_in != GetCurrentThreadId()) {
 #else
     if (created_in != pthread_self()) {
 #endif
