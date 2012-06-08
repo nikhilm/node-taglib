@@ -312,7 +312,11 @@ void CallbackResolver::invokeResolverCb(uv_async_t *handle, int status)
 {
     AsyncResolverBaton *baton = (AsyncResolverBaton *) handle->data;
     invokeResolver(baton);
-    uv_mutex_unlock(&baton->mutex);
+#ifdef _WIN32
+    WakeAllConditionVariable(&baton->cv);
+#else
+    pthread_cond_broadcast(&baton->cv);
+#endif
     uv_close((uv_handle_t*)&baton->request, 0);
 }
 
@@ -343,10 +347,21 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
 #endif
         uv_async_init(uv_default_loop(), &baton.request, invokeResolverCb);
         uv_mutex_init(&baton.mutex);
+        uv_mutex_lock(&baton.mutex);
 
-        uv_mutex_lock(&baton.mutex);
+#ifdef _WIN32
+        InitializeConditionVariable(&baton.cv);
+#else
+        if (pthread_cond_init(&baton.cv, NULL))
+            abort();
+#endif
+
         uv_async_send(&baton.request);
-        uv_mutex_lock(&baton.mutex);
+#ifdef _WIN32
+        SleepConditionVariableCS(&baton.cv, &baton.mutex, INFINITE);
+#else
+        pthread_cond_wait(&baton.cv, &baton.mutex);
+#endif
     }
     else {
         invokeResolver(&baton);
@@ -361,6 +376,10 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
 #endif
         uv_mutex_unlock(&baton.mutex);
         uv_mutex_destroy(&baton.mutex);
+#ifdef _WIN32
+#else
+        pthread_cond_destroy(&baton.cv);
+#endif
     }
 
     return node_taglib::createFile(stream, baton.type);

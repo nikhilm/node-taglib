@@ -55,6 +55,11 @@ class CallbackResolver;
 struct AsyncResolverBaton {
     uv_async_t request;
     uv_mutex_t mutex;
+#ifdef _WIN32
+    CONDITION_VARIABLE cv;
+#else
+    pthread_cond_t cv;
+#endif
     const CallbackResolver *resolver;
     TagLib::FileName fileName;
     TagLib::String type;
