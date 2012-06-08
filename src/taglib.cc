@@ -284,6 +284,7 @@ TagLib::String NodeStringToTagLibString( Local<Value> s )
     }
 }
 
+#ifdef ENABLE_RESOLVERS
 Handle<Value> AddResolvers(const Arguments &args)
 {
     for (int i = 0; i < args.Length(); i++) {
@@ -364,6 +365,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
 
     return node_taglib::createFile(stream, baton.type);
 }
+#endif // ENABLE_RESOLVERS
 }
 
 extern "C" {
@@ -386,7 +388,9 @@ init (Handle<Object> target)
 #endif
 
     NODE_SET_METHOD(target, "read", AsyncReadFile);
+#ifdef ENABLE_RESOLVERS
     NODE_SET_METHOD(target, "addResolvers", AddResolvers);
+#endif
     Tag::Initialize(target);
 }
 

@@ -7,6 +7,12 @@
 #include <uv.h>
 #include <sys/time.h>
 
+#include <node_version.h>
+
+#if NODE_VERSION_AT_LEAST(0, 7, 0)
+#define ENABLE_RESOLVERS
+#endif
+
 namespace node_taglib {
 class Tag;
 class BufferStream;
@@ -21,8 +27,6 @@ static TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format)
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
-v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);
-
 v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args);
 void AsyncReadFileDo(uv_work_t *req);
 void AsyncReadFileAfter(uv_work_t *req);
@@ -42,6 +46,9 @@ struct AsyncBaton {
     TagLib::FileRef *fileRef; /* only used by taglib.read */
     Tag *tag; /* only used by taglib.tag */
 };
+
+#ifdef ENABLE_RESOLVERS
+v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);
 
 class CallbackResolver;
 
@@ -63,6 +70,7 @@ public:
     static void invokeResolverCb(uv_async_t *handle, int status);
     static void invokeResolver(AsyncResolverBaton *baton);
 };
+#endif
 
 }
 #endif

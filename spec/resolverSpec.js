@@ -3,6 +3,8 @@ var assert = require('assert'),
     fs = require('fs'),
     Taglib = require(__dirname + '/../taglib');
 
+if (Taglib.addResolvers) {
+
 Taglib.addResolvers(function(fn) {
   var data = fs.readFileSync(fn, 'ascii');
   if (data.substring(0, 3) == 'ID3')
@@ -231,3 +233,5 @@ vows.describe('taglib bindings: Dumb mp3 Resolver')
     }
   }
 }).export(module);
+
+}
