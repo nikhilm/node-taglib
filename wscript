@@ -18,7 +18,7 @@ def configure(conf):
 
 def post_build(ctx):
   base_path = ctx.srcnode.abspath(ctx.get_env())
-  if not os.path.exists('taglib.node'):
+  if not os.fs.exists('taglib.node'):
       os.symlink(os.path.join(base_path, 'taglib.node'), 'taglib.node')
 
 def build(bld):
@@ -29,5 +29,5 @@ def build(bld):
   obj.uselib = "TAGLIB"
 
 def clean(ctx):
-  if os.path.exists('taglib.node'):
+  if os.fs.exists('taglib.node'):
     os.unlink('taglib.node')
