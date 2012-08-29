@@ -1,7 +1,7 @@
 var assert = require('assert'),
     vows = require('vows'),
     fs = require('fs'),
-    Taglib = require('bindings')('taglib.node')
+    Taglib = require('../index')
 
 if (Taglib.addResolvers) {
 
