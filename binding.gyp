@@ -2,7 +2,6 @@
   "targets": [
     {
       "target_name": "taglib",
-      "type": "<(library)",
       "sources": ["src/bufferstream.c", "src/tag.cc", "src/taglib.cc"],
       "libraries": ["<!(taglib-config --libs)"],
       'conditions': [
