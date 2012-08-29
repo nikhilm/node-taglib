@@ -1,3 +1,7 @@
+2012.08.29, v0.6.0
+
+* Switch to node-gyp. node-waf support is removed.
+
 2012.06.08, v0.6.0
 
 * This release is due to a major issue with compiling node-taglib and minimum
