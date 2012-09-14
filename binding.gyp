@@ -11,6 +11,9 @@
           'xcode_settings': {
             'OTHER_CFLAGS': [
               '<!@(taglib-config --cflags)'
+            ],
+            'OTHER_LDFLAGS': [
+              '-dynamiclib'
             ]
           }
         }, {
