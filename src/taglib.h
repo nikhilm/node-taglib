@@ -9,10 +9,6 @@
 
 #include <node_version.h>
 
-#if NODE_VERSION_AT_LEAST(0, 7, 0)
-#define ENABLE_RESOLVERS
-#endif
-
 namespace node_taglib {
 class Tag;
 class BufferStream;
@@ -47,7 +43,6 @@ struct AsyncBaton {
     Tag *tag; /* only used by taglib.tag */
 };
 
-#ifdef ENABLE_RESOLVERS
 v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);
 
 class CallbackResolver;
@@ -71,7 +66,6 @@ public:
     static void stopIdling(uv_async_t *handle, int status);
     static void invokeResolver(AsyncResolverBaton *baton);
 };
-#endif
 
 }
 #endif
