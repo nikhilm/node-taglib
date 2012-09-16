@@ -312,12 +312,13 @@ void CallbackResolver::invokeResolverCb(uv_async_t *handle, int status)
 {
     AsyncResolverBaton *baton = (AsyncResolverBaton *) handle->data;
     invokeResolver(baton);
-#ifdef _WIN32
-    WakeAllConditionVariable(&baton->cv);
-#else
-    pthread_cond_broadcast(&baton->cv);
-#endif
+    uv_async_send((uv_async_t*) &baton->idler);
     uv_close((uv_handle_t*)&baton->request, 0);
+}
+
+void CallbackResolver::stopIdling(uv_async_t *handle, int status)
+{
+    uv_close((uv_handle_t*) handle, 0);
 }
 
 void CallbackResolver::invokeResolver(AsyncResolverBaton *baton)
@@ -345,42 +346,19 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
 #else
     if (created_in != pthread_self()) {
 #endif
+        uv_loop_t *wait_loop = uv_loop_new();
+        uv_async_init(wait_loop, &baton.idler, CallbackResolver::stopIdling);
+
         uv_async_init(uv_default_loop(), &baton.request, invokeResolverCb);
-        uv_mutex_init(&baton.mutex);
-        uv_mutex_lock(&baton.mutex);
-
-#ifdef _WIN32
-        InitializeConditionVariable(&baton.cv);
-#else
-        if (pthread_cond_init(&baton.cv, NULL))
-            abort();
-#endif
-
         uv_async_send(&baton.request);
-#ifdef _WIN32
-        SleepConditionVariableCS(&baton.cv, &baton.mutex, INFINITE);
-#else
-        pthread_cond_wait(&baton.cv, &baton.mutex);
-#endif
+        uv_run(wait_loop);
+        uv_loop_delete(wait_loop);
     }
     else {
         invokeResolver(&baton);
     }
 
     TagLib::FileStream *stream = new TagLib::FileStream(fileName);
-
-#ifdef _WIN32
-    if (created_in != GetCurrentThreadId()) {
-#else
-    if (created_in != pthread_self()) {
-#endif
-        uv_mutex_unlock(&baton.mutex);
-        uv_mutex_destroy(&baton.mutex);
-#ifdef _WIN32
-#else
-        pthread_cond_destroy(&baton.cv);
-#endif
-    }
 
     return node_taglib::createFile(stream, baton.type);
 }

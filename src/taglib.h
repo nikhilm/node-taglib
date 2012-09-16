@@ -54,15 +54,10 @@ class CallbackResolver;
 
 struct AsyncResolverBaton {
     uv_async_t request;
-    uv_mutex_t mutex;
-#ifdef _WIN32
-    CONDITION_VARIABLE cv;
-#else
-    pthread_cond_t cv;
-#endif
     const CallbackResolver *resolver;
     TagLib::FileName fileName;
     TagLib::String type;
+    uv_async_t idler;
 };
 
 class CallbackResolver : public TagLib::FileRef::FileTypeResolver {
@@ -73,6 +68,7 @@ public:
     CallbackResolver(v8::Persistent<v8::Function> func);
     TagLib::File *createFile(TagLib::FileName fileName, bool readAudioProperties, TagLib::AudioProperties::ReadStyle audioPropertiesStyle) const;
     static void invokeResolverCb(uv_async_t *handle, int status);
+    static void stopIdling(uv_async_t *handle, int status);
     static void invokeResolver(AsyncResolverBaton *baton);
 };
 #endif
