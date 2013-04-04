@@ -350,7 +350,7 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
 
         uv_async_init(uv_default_loop(), &baton.request, invokeResolverCb);
         uv_async_send(&baton.request);
-        uv_run(wait_loop);
+        uv_run(wait_loop, UV_RUN_DEFAULT);
         uv_loop_delete(wait_loop);
     }
     else {
