@@ -160,7 +160,7 @@ Handle<Value> Tag::SyncTag(const Arguments &args) {
 
     if (args.Length() >= 1 && args[0]->IsString()) {
         String::Utf8Value path(args[0]->ToString());
-        if (error = CreateFileRefPath(*path, &f)) {
+        if ((error = CreateFileRefPath(*path, &f))) {
             Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
             return ThrowException(String::Concat(fn, ErrorToString(error)));
         }
@@ -169,7 +169,7 @@ Handle<Value> Tag::SyncTag(const Arguments &args) {
         if (args.Length() < 2 || !args[1]->IsString())
             return ThrowException(String::New("Expected string 'format' as second argument"));
 
-        if (error = CreateFileRef(new BufferStream(args[0]->ToObject()), NodeStringToTagLibString(args[1]->ToString()), &f)) {
+        if ((error = CreateFileRef(new BufferStream(args[0]->ToObject()), NodeStringToTagLibString(args[1]->ToString()), &f))) {
             return ThrowException(ErrorToString(error));
         }
     }
