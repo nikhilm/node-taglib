@@ -196,7 +196,7 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
         baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
     }
 
-    uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, AsyncReadFileAfter);
+    uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, (uv_after_work_cb)AsyncReadFileAfter);
 
     return Undefined();
 }

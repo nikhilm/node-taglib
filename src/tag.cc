@@ -225,7 +225,7 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
         baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
     }
 
-    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagReadDo, Tag::AsyncTagReadAfter);
+    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagReadDo, (uv_after_work_cb)Tag::AsyncTagReadAfter);
 
     return Undefined();
 }
@@ -288,7 +288,7 @@ v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
     baton->callback = Persistent<Function>::New(callback);
     baton->error = 1;
 
-    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncSaveTagDo, Tag::AsyncSaveTagAfter);
+    uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncSaveTagDo, (uv_after_work_cb)Tag::AsyncSaveTagAfter);
 
     return Undefined();
 }
