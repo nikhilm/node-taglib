@@ -14,13 +14,6 @@ using namespace node;
 
 namespace node_taglib {
 
-static suseconds_t now()
-{
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    return t.tv_usec;
-}
-
 static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
