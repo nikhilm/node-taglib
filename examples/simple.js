@@ -1,4 +1,4 @@
-var Taglib = require(__dirname+"/../taglib")
+var Taglib = require('bindings')('taglib');
 var util = require("util")
 
 for (var i = 2; i < process.argv.length; i++) {

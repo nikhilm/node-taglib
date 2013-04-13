@@ -49,7 +49,7 @@ certain bugs present in the released v1.7 cause problems.**
     # make sure you have node and taglib installed
     git clone git://github.com/nikhilm/node-taglib.git
     cd node-taglib
-    node-waf configure build
+    npm install .
     node examples/simple.js /path/to/mp3_or_ogg_file
     # you can now require('./taglib')
 
