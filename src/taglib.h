@@ -19,7 +19,7 @@ class BufferStream;
  */
 int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref);
 int CreateFileRef(TagLib::IOStream *stream, TagLib::String format, TagLib::FileRef **ref);
-static TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
+TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
