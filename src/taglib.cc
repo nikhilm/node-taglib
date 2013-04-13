@@ -293,6 +293,7 @@ Handle<Value> AddResolvers(const Arguments &args)
             TagLib::FileRef::addFileTypeResolver(new CallbackResolver(resolver));
         }
     }
+    return Undefined();
 }
 
 CallbackResolver::CallbackResolver(Persistent<Function> func)
