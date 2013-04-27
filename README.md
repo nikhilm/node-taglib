@@ -166,7 +166,7 @@ and returns a format `string`. List of [formats](#formats).
 
 ### Formats {#formats}
 
-Any place where `node-taglib` expects a format can be passed on of these
+Any place where `node-taglib` expects a format can be passed one of these
 (case-insensitive):
 
     "MPEG"
