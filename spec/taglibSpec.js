@@ -5,12 +5,12 @@ var assert = require('assert'),
 
 vows.describe('taglib bindings')
 .addBatch({
-  /*'opening UTF-8 Path': {
-    topic: Taglib.tagSync(__dirname + '/sample-with-ütf.mp3'),
-    'should be a `Tag`': function(tag) {
-      assert.equal(Taglib.Tag, tag.constructor);
+  'opening UTF-8 Path': {
+    topic: Taglib.readSync(__dirname + '/sample-with-ütf.mp3'),
+    'should be a `Metadata`': function(m) {
+      assert.equal(Taglib.Metadata, m.constructor);
     }
-  },*/
+  },
 
   'ASF support yes/no should be defined': {
     topic: Taglib.WITH_ASF,
@@ -76,7 +76,7 @@ vows.describe('taglib bindings')
     },
 
     'should throw an exception': function(topic) {
-        assert.throws(topic, /extract tags/);
+        assert.throws(topic, /extract metadata/);
     }
   },
 
@@ -105,16 +105,23 @@ vows.describe('taglib bindings')
       m.artist = null;
       m.album = null;
       m.genre = null;
-      m.year = null;
       m.comment = null;
+      // for numeric, test with both 0 and null
+      m.year = 0;
       m.track = null;
       m.writeSync();
       return filename;
     },
 
     'should result in a metadata that is empty': function(filename) {
-      var metadata = Taglib.readSync(filename);
-      assert.ok(metadata.artist == null);
+      var m = Taglib.readSync(filename);
+      assert.isNull(m.artist);
+      assert.isNull(m.title);
+      assert.isNull(m.album);
+      assert.isNull(m.genre);
+      assert.isNull(m.comment);
+      assert.equal(m.year, 0);
+      assert.equal(m.track, 0);
     }
   },
 
@@ -160,9 +167,10 @@ vows.describe('taglib bindings')
         });
       });
     },
-    'should have written `Something completely different…` to title': function (filename) {
-      var metadata = Taglib.readSync(filename);
-      assert.equal(metadata.title, "Something completely different…");
+    'should have written `Something completely different…` to title': function (err, filename) {
+      assert.isNull(err);
+      var m = Taglib.readSync(filename);
+      assert.equal(m.title, "Something completely different…");
     }
   },
 
@@ -201,7 +209,7 @@ vows.describe('taglib bindings')
       }
     },
 
-    'reading audioProperties': {
+    'reading audio properties': {
       topic: function() {
         Taglib.read(__dirname+'/blip.mp3', this.callback);
       },

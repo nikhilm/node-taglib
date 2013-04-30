@@ -10,7 +10,7 @@
 #include <node_version.h>
 
 namespace node_taglib {
-class Tag;
+class Metadata;
 class BufferStream;
 
 /**
@@ -23,10 +23,14 @@ TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
+
+v8::Handle<v8::Value> ReadFile(const v8::Arguments &args);
+
 v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args);
 void AsyncReadFileDo(uv_work_t *req);
 void AsyncReadFileAfter(uv_work_t *req);
 
+// TODO: split to save memory?
 struct AsyncBaton {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
@@ -40,7 +44,7 @@ struct AsyncBaton {
                           // so don't do BufferStream deletion
 
     TagLib::FileRef *fileRef; /* only used by taglib.read */
-    Tag *tag; /* only used by taglib.tag */
+    v8::Persistent<v8::Object> metadata; /* only used by write() */
 };
 
 v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);

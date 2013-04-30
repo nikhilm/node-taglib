@@ -83,7 +83,7 @@ vows.describe('taglib bindings: Buffers')
 
     'should raise an error': function(err, _, _) {
       assert.isNotNull(err);
-      assert.match(err.message, /Failed to extract metadatas/);
+      assert.match(err.message, /Failed to extract metadata/);
     }
   },
 

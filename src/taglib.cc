@@ -30,8 +30,7 @@
 #include <itfile.h>
 #include <xmfile.h>
 
-#include "audioproperties.h"
-#include "tag.h"
+#include "metadata.h"
 #include "bufferstream.h"
 
 using namespace v8;
@@ -48,7 +47,7 @@ int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref) {
     else {
         f = new TagLib::FileRef(path);
 
-        if ( f->isNull() || !f->tag() )
+        if (f->isNull())
         {
             error = EINVAL;
             delete f;
@@ -75,7 +74,7 @@ int CreateFileRef(TagLib::IOStream *stream, TagLib::String format, TagLib::FileR
 
     f = new TagLib::FileRef(file);
 
-    if (f->isNull() || !f->tag())
+    if (f->isNull())
     {
         error = EINVAL;
         delete f;
@@ -140,7 +139,7 @@ Handle<String> ErrorToString(int error) {
             break;
 
         case EINVAL:
-            err = "Failed to extract tags";
+            err = "Failed to extract metadata";
             break;
 
         case EBADF:
@@ -155,26 +154,83 @@ Handle<String> ErrorToString(int error) {
     return scope.Close(String::New(err.c_str(), err.length()));
 }
 
-v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
-    HandleScope scope;
-
+/**
+ * Actually an internal function using v8 types.
+ *
+ * Type-checks the parameters to read(). Returns v8::True() if the arguments
+ * are fine, otherwise returns an exception which can be bubbled up to JS.
+ */
+static Handle<Value> ProcessReadArguments(const Arguments &args, bool checkCallback) {
     if (args.Length() < 1) {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        return ThrowException(String::New("Expected path or buffer as first argument"));
     }
 
+    // path case
     if (args[0]->IsString()) {
-        if (args.Length() < 2 || !args[1]->IsFunction())
+        if (checkCallback && (args.Length() < 2 || !args[1]->IsFunction()))
             return ThrowException(String::New("Expected callback function as second argument"));
 
     }
     else if (Buffer::HasInstance(args[0])) {
         if (args.Length() < 2 || !args[1]->IsString())
-            return ThrowException(String::New("Expected string 'format' as second argument"));
-        if (args.Length() < 3 || !args[2]->IsFunction())
+            return ThrowException(String::New("Expected format as second argument"));
+
+        if (checkCallback && (args.Length() < 3 || !args[2]->IsFunction()))
             return ThrowException(String::New("Expected callback function as third argument"));
+
     }
     else {
         return ThrowException(String::New("Expected string or buffer as first argument"));
+    }
+
+    return True();
+}
+
+Handle<Value> ReadFile(const Arguments &args) {
+    HandleScope scope;
+
+    Handle<Value> argsCheck = ProcessReadArguments(args, false /* checkCallback */);
+    if (!argsCheck->IsTrue()) {
+        return scope.Close(argsCheck);
+    }
+
+    int error;
+    BufferStream *buf = 0;
+    TagLib::FileRef *f = 0;
+
+    if (args[0]->IsString()) {
+        String::Utf8Value path(args[0]->ToString());
+        if ((error = CreateFileRefPath(*path, &f))) {
+            Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
+            return ThrowException(String::Concat(fn, ErrorToString(error)));
+        }
+    }
+    else {
+        buf = new BufferStream(args[0]->ToObject());
+        if ((error = CreateFileRef(buf, NodeStringToTagLibString(args[1]->ToString()), &f))) {
+            delete buf;
+            return ThrowException(ErrorToString(error));
+        }
+    }
+
+    Persistent<Object> inst = MakeMetadata(f);
+
+    if (args[0]->IsString())
+        inst->SetHiddenValue(String::New("node_taglib::path"), args[0]->ToString());
+
+    delete f;
+    if (buf)
+        delete buf;
+
+    return scope.Close(inst);
+}
+
+Handle<Value> AsyncReadFile(const Arguments &args) {
+    HandleScope scope;
+
+    Handle<Value> argsCheck = ProcessReadArguments(args, true /* checkCallback */);
+    if (!argsCheck->IsTrue()) {
+        return scope.Close(argsCheck);
     }
 
     AsyncBaton *baton = new AsyncBaton;
@@ -196,7 +252,7 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
         baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
     }
 
-    uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, (uv_after_work_cb)AsyncReadFileAfter);
+    uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, (uv_after_work_cb) AsyncReadFileAfter);
 
     return Undefined();
 }
@@ -204,7 +260,7 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
 void AsyncReadFileDo(uv_work_t *req) {
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
-    TagLib::FileRef *f;
+    TagLib::FileRef *f = 0;
 
     if (baton->path) {
         baton->error = node_taglib::CreateFileRefPath(baton->path, &f);
@@ -229,33 +285,20 @@ void AsyncReadFileAfter(uv_work_t *req) {
         baton->callback->Call(Context::GetCurrent()->Global(), 3, argv);
     }
     else {
-        // read the data, put it in objects and delete the fileref
-        TagLib::Tag *tag = baton->fileRef->tag();
-        Local<Object> tagObj = Object::New();
-        if (!tag->isEmpty()) {
-            tagObj->Set(String::New("album"), TagLibStringToString(tag->album()));
-            tagObj->Set(String::New("artist"), TagLibStringToString(tag->artist()));
-            tagObj->Set(String::New("comment"), TagLibStringToString(tag->comment()));
-            tagObj->Set(String::New("genre"), TagLibStringToString(tag->genre()));
-            tagObj->Set(String::New("title"), TagLibStringToString(tag->title()));
-            tagObj->Set(String::New("track"), Integer::New(tag->track()));
-            tagObj->Set(String::New("year"), Integer::New(tag->year()));
-        }
-
-        TagLib::AudioProperties *props = baton->fileRef->audioProperties();
-        Local<Object> propsObj = Object::New();
-        if (props) {
-            propsObj->Set(String::New("length"), Integer::New(props->length()));
-            propsObj->Set(String::New("bitrate"), Integer::New(props->bitrate()));
-            propsObj->Set(String::New("sampleRate"), Integer::New(props->sampleRate()));
-            propsObj->Set(String::New("channels"), Integer::New(props->channels()));
-        }
-
-        Handle<Value> argv[] = { Null(), tagObj, propsObj };
-        baton->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+        // Read the data, put it in objects and delete the fileref.
+        Persistent<Object> inst = MakeMetadata(baton->fileRef);
+        if (baton->path)
+            inst->SetHiddenValue(String::New("node_taglib::path"), TagLibStringToString(baton->path));
 
         delete baton->fileRef;
+
+        Handle<Value> argv[] = { Null(), inst };
+        baton->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+        if (baton->stream)
+            delete baton->stream;
+
         delete baton;
+
         baton = NULL;
     }
 }
@@ -372,22 +415,21 @@ init (Handle<Object> target)
     HandleScope scope;
 
 #ifdef TAGLIB_WITH_ASF
-    target->Set(String::NewSymbol("WITH_ASF"), v8::True());
+    target->Set(String::NewSymbol("WITH_ASF"), True());
 #else
-    target->Set(String::NewSymbol("WITH_ASF"), v8::False());
+    target->Set(String::NewSymbol("WITH_ASF"), False());
 #endif
 
 #ifdef TAGLIB_WITH_MP4
-    target->Set(String::NewSymbol("WITH_MP4"), v8::True());
+    target->Set(String::NewSymbol("WITH_MP4"), True());
 #else
-    target->Set(String::NewSymbol("WITH_MP4"), v8::False());
+    target->Set(String::NewSymbol("WITH_MP4"), False());
 #endif
 
     NODE_SET_METHOD(target, "read", AsyncReadFile);
-#ifdef ENABLE_RESOLVERS
+    NODE_SET_METHOD(target, "readSync", ReadFile);
     NODE_SET_METHOD(target, "addResolvers", AddResolvers);
-#endif
-    Tag::Initialize(target);
+    InitializeMetadata(target);
 }
 
 NODE_MODULE(taglib, init)

@@ -2,7 +2,7 @@
   "targets": [
     {
       "target_name": "taglib",
-      "sources": ["src/bufferstream.c", "src/tag.cc", "src/taglib.cc"],
+      "sources": ["src/bufferstream.c", "src/metadata.cc", "src/taglib.cc"],
       "libraries": ["<!(taglib-config --libs)"],
       'conditions': [
         ['OS=="mac"', {

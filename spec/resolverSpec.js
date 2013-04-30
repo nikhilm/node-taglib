@@ -14,6 +14,7 @@ Taglib.addResolvers(function(fn) {
 
 vows.describe('taglib bindings: Dumb mp3 Resolver')
 .addBatch({
+/*
   'reading Tags from File using readSync': {
     topic: Taglib.readSync(__dirname+'/sample.mp3'),
     'should be a `Metadata`': function (metadata) {
@@ -61,11 +62,11 @@ vows.describe('taglib bindings: Dumb mp3 Resolver')
     },
 
     'should have an empty tag': function(topic) {
-      assert.throws(topic, /extract tags/);
+      assert.throws(topic, /extract metadata/);
     }
   },
 
-  'writing Tags to File': {
+  'writing metadata to File': {
     topic: function() {
       var filename = __dirname+'/sample-write.mp3';
       fs.writeFileSync(filename, fs.readFileSync(__dirname+'/sample.mp3'));
@@ -80,29 +81,35 @@ vows.describe('taglib bindings: Dumb mp3 Resolver')
     }
   },
 
-  'stripping Tags from File': {
+  'stripping metadata from File': {
     topic: function() {
       var filename, t;
       filename = __dirname + '/sample-clean.mp3';
       fs.writeFileSync(filename, fs.readFileSync(__dirname + '/sample.mp3'));
-      t = Taglib.readSync(filename);
-      t.title = null;
-      t.artist = null;
-      t.album = null;
-      t.genre = null;
-      t.year = null;
-      t.comment = null;
-      t.track = null;
-      t.writeSync();
+      m = Taglib.readSync(filename);
+      m.title = null;
+      m.artist = null;
+      m.album = null;
+      m.genre = null;
+      m.comment = null;
+      // for numeric, test with both 0 and null
+      m.year = 0;
+      m.track = null;
+      m.writeSync();
       return filename;
     },
     'should result in empty metadata': function(filename) {
       var m = Taglib.readSync(filename);
-      assert.ok(m.artist == null);
+      assert.isNull(m.artist);
+      assert.isNull(m.title);
+      assert.isNull(m.genre);
+      assert.isNull(m.comment);
+      assert.equal(m.year, 0);
+      assert.equal(m.track, 0);
     }
   },
 
-  'writing Tag to a file asynchronously': {
+  'writing metadata to a file asynchronously': {
     topic: function() {
       var filename = __dirname+'/sample-write-async.mp3';
       fs.writeFileSync(filename, fs.readFileSync(__dirname+'/sample.mp3'));
@@ -123,6 +130,7 @@ vows.describe('taglib bindings: Dumb mp3 Resolver')
     }
   },
 
+*/
   'reading file metadata asynchronously': {
     topic: function() {
       Taglib.read(__dirname+'/sample.mp3', this.callback);
@@ -133,30 +141,37 @@ vows.describe('taglib bindings: Dumb mp3 Resolver')
       assert.isObject(metadata);
     },
 
-    'reading metadata': {
+    'reading tags': {
       topic: function() {
         Taglib.read(__dirname+'/sample.mp3', this.callback);
       },
 
-      'title should be `A bit-bucket full of tags`': function (metadata) {
+      'title should be `A bit-bucket full of tags`': function (err, metadata) {
         assert.equal(metadata.title, 'A bit-bucket full of tags');
       },
-      'artist should be by `gitzer\'s`': function (metadata) {
+      'artist should be by `gitzer\'s`': function (err, metadata) {
         assert.equal(metadata.artist, 'gitzer\'s');
       },
-      'album should be on `Waffles for free!`': function (metadata) {
+      'album should be on `Waffles for free!`': function (err, metadata) {
         assert.equal(metadata.album, "Waffles for free!");
       },
-      'track should be the first': function (metadata) {
+      'track should be the first': function (err, metadata) {
         assert.equal(metadata.track, 1);
       },
-      'should be from 2011': function (metadata) {
+      'should be from 2011': function (err, metadata) {
         assert.equal(metadata.year, 2011);
       },
-      'should have a silly comment': function(metadata) {
+      'should have a silly comment': function(err, metadata) {
         assert.equal(metadata.comment, "Salami Wiglet.");
       },
+    },
+
+    'reading audio properties': {
+      topic: function() {
+        Taglib.read(__dirname+'/blip.mp3', this.callback);
+      },
       'should have length 1 second': function(err, metadata) {
+      console.log(metadata);
         assert.equal(metadata.length, 1);
       },
       'should have bitrate 128kbps': function(err, metadata) {
