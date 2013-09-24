@@ -20,7 +20,7 @@
     "match-files" : "latest"
   },
   "scripts": {
-    "test": "vows"
+    "test": "vows --spec"
   },
   "engines": {
     "node": ">= 0.10.0"
