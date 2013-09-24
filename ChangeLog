@@ -1,3 +1,10 @@
+2013.09.23, v0.8.0
+
+* Bumps minimum node version to 0.10.0.
+* Replaces monitors with nested event loop for custom resolvers. Resolver
+  support is now enabled by default.
+* Various compiler and linker fixes.
+
 2012.08.29, v0.7.0
 
 * Switch to node-gyp. node-waf support is removed.
