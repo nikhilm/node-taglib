@@ -161,23 +161,24 @@ NAN_METHOD(AsyncReadFile) {
 	NanScope();
 //    HandleScope scope;
 
+
     if (args.Length() < 1) {
-        NanThrowError("Expected string or buffer as first argument");
+        return NanThrowError("Expected string or buffer as first argument");
     }
 
     if (args[0]->IsString()) {
         if (args.Length() < 2 || !args[1]->IsFunction())
-            NanThrowError("Expected callback function as second argument");
+            return NanThrowError("Expected callback function as second argument");
 
     }
     else if (Buffer::HasInstance(args[0])) {
         if (args.Length() < 2 || !args[1]->IsString())
-            NanThrowError("Expected string 'format' as second argument");
+            return NanThrowError("Expected string 'format' as second argument");
         if (args.Length() < 3 || !args[2]->IsFunction())
-            NanThrowError("Expected callback function as third argument");
+            return NanThrowError("Expected callback function as third argument");
     }
     else {
-        NanThrowError("Expected string or buffer as first argument");
+        return NanThrowError("Expected string or buffer as first argument");
     }
 
     AsyncBaton *baton = new AsyncBaton;
@@ -190,16 +191,14 @@ NAN_METHOD(AsyncReadFile) {
     if (args[0]->IsString()) {
         String::Utf8Value path(args[0]->ToString());
         baton->path = strdup(*path);
-	baton->localCallback = Local<Function>::Cast(args[1]);
-	NanAssignPersistent(baton->callback, baton->localCallback);
+	NanAssignPersistent(baton->callback, Local<Function>::Cast(args[1]));
 //        baton->callback = Persistent<Function>::New(baton->localCallback);
 
     }
     else {
         baton->format = NodeStringToTagLibString(args[1]->ToString());
         baton->stream = new BufferStream(args[0]->ToObject());
-	baton->localCallback = Local<Function>::Cast(args[2]);
-	NanAssignPersistent(baton->callback, baton->localCallback);
+	NanAssignPersistent(baton->callback, Local<Function>::Cast(args[2]));
 //        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
     }
 
@@ -227,13 +226,14 @@ void AsyncReadFileDo(uv_work_t *req) {
 }
 
 void AsyncReadFileAfter(uv_work_t *req) {
+    NanScope();
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
     if (baton->error) {
         Local<Object> error = NanNew<Object>();
         error->Set(NanNew<String>("code"), NanNew<Integer>(baton->error));
         error->Set(NanNew<String>("message"), ErrorToString(baton->error));
         Handle<Value> argv[] = { error, NanNull(), NanNull() };
-        baton->localCallback->Call(NanGetCurrentContext()->Global(), 3, argv);
+        NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 3, argv);
     }
     else {
         // read the data, put it in objects and delete the fileref
@@ -259,7 +259,7 @@ void AsyncReadFileAfter(uv_work_t *req) {
         }
 
         Handle<Value> argv[] = { NanNull(), tagObj, propsObj };
-        baton->localCallback->Call(NanGetCurrentContext()->Global(), 3, argv);
+        NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 3, argv);
 
         delete baton->fileRef;
         delete baton;
@@ -269,6 +269,7 @@ void AsyncReadFileAfter(uv_work_t *req) {
 
 Handle<Value> TagLibStringToString( TagLib::String s )
 {
+  NanEscapableScope();
     if(s.isEmpty()) {
         return NanNull();
     }
@@ -276,7 +277,8 @@ Handle<Value> TagLibStringToString( TagLib::String s )
         TagLib::ByteVector str = s.data(TagLib::String::UTF16);
         // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
         // Byte Order Mark
-        return NanNew<String>((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
+	Handle<String> v8string = NanNew<String>((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
+        return NanEscapeScope(v8string);
     }
 }
 
@@ -294,6 +296,7 @@ TagLib::String NodeStringToTagLibString( Local<Value> s )
 //Handle<Value> AddResolvers(const Arguments &args)
 NAN_METHOD(AddResolvers)
 {
+  NanScope();
     for (int i = 0; i < args.Length(); i++) {
         Local<Value> arg = args[i];
         if (arg->IsFunction()) {
@@ -303,9 +306,8 @@ NAN_METHOD(AddResolvers)
     NanReturnUndefined();
 }
 
-CallbackResolver::CallbackResolver(Handle<Function> localFunc)
+CallbackResolver::CallbackResolver(Handle<Function> func)
     : TagLib::FileRef::FileTypeResolver()
-    , localResolverFunc(localFunc)
     // the constructor is always called in the v8 thread
 #ifdef _WIN32
     , created_in(GetCurrentThreadId())
@@ -313,7 +315,7 @@ CallbackResolver::CallbackResolver(Handle<Function> localFunc)
     , created_in(pthread_self())
 #endif
 {
-  NanAssignPersistent(resolverFunc, localResolverFunc);
+  NanAssignPersistent(resolverFunc, func);
 }
 
 void CallbackResolver::invokeResolverCb(uv_async_t *handle)
@@ -334,7 +336,7 @@ void CallbackResolver::invokeResolver(AsyncResolverBaton *baton)
   NanScope();
 //    HandleScope scope;
     Handle<Value> argv[] = { TagLibStringToString(baton->fileName) };
-    Local<Value> ret = baton->resolver->localResolverFunc->Call(NanGetCurrentContext()->Global(), 1, argv);
+    Local<Value> ret = NanNew(baton->resolver->resolverFunc)->Call(NanGetCurrentContext()->Global(), 1, argv);
     if (!ret->IsString()) {
         baton->type = TagLib::String::null;
     }

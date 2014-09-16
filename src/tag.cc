@@ -14,7 +14,6 @@ using namespace node;
 
 namespace node_taglib {
 
-static Local<FunctionTemplate> localTagTemplate;
 static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
@@ -22,12 +21,12 @@ void Tag::Initialize(Handle<Object> target)
   NanScope();
 //    HandleScope scope;
 
-  localTagTemplate = NanNew<FunctionTemplate>();
+  Local<FunctionTemplate> localTagTemplate = NanNew<FunctionTemplate>();
   NanAssignPersistent(TagTemplate, localTagTemplate);
 //    TagTemplate = Persistent<FunctionTemplate>::New(FunctionTemplate::New());
 
     localTagTemplate->InstanceTemplate()->SetInternalFieldCount(1);
-//    localTagTemplate->SetClassName(String::NewSymbol("Tag"));
+    localTagTemplate->SetClassName(NanNew<String>("Tag"));
 
     NODE_SET_PROTOTYPE_METHOD(localTagTemplate, "save", AsyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(localTagTemplate, "saveSync", SyncSaveTag);
@@ -184,7 +183,7 @@ NAN_METHOD(Tag::SyncSaveTag) {
   if (success)
       NanReturnUndefined();
   else
-      NanThrowError(String::Concat(
+      return NanThrowError(String::Concat(
                 NanNew<String>("Failed to save file: "),
                 NanNew<String>(t->fileRef->file()->name())
             ));
@@ -202,23 +201,23 @@ NAN_METHOD(Tag::SyncTag) {
         String::Utf8Value path(args[0]->ToString());
         if ((error = CreateFileRefPath(*path, &f))) {
             Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(NanNew<String>(": ", -1)));
-            NanThrowError(String::Concat(fn, ErrorToString(error)));
+            return NanThrowError(String::Concat(fn, ErrorToString(error)));
         }
     }
     else if (args.Length() >= 1 && Buffer::HasInstance(args[0])) {
         if (args.Length() < 2 || !args[1]->IsString())
-            NanThrowError("Expected string 'format' as second argument");
+            return NanThrowError("Expected string 'format' as second argument");
 
         if ((error = CreateFileRef(new BufferStream(args[0]->ToObject()), NodeStringToTagLibString(args[1]->ToString()), &f))) {
-            NanThrowError(ErrorToString(error));
+            return NanThrowError(ErrorToString(error));
         }
     }
     else {
-        NanThrowError("Expected string or buffer as first argument");
+        return NanThrowError("Expected string or buffer as first argument");
     }
 
     Tag * tag = new Tag(f);
-    Handle<Object> inst = localTagTemplate->InstanceTemplate()->NewInstance();
+    Handle<Object> inst = NanNew(TagTemplate)->InstanceTemplate()->NewInstance();
     tag->Wrap(inst);
 
     NanReturnValue(inst);
@@ -231,22 +230,22 @@ NAN_METHOD(Tag::AsyncTag) {
 //    HandleScope scope;
 
     if (args.Length() < 1) {
-        NanThrowError("Expected string or buffer as first argument");
+        return NanThrowError("Expected string or buffer as first argument");
     }
 
     if (args[0]->IsString()) {
         if (args.Length() < 2 || !args[1]->IsFunction())
-            NanThrowError("Expected callback function as second argument");
+            return NanThrowError("Expected callback function as second argument");
 
     }
     else if (Buffer::HasInstance(args[0])) {
         if (args.Length() < 2 || !args[1]->IsString())
-            NanThrowError("Expected string 'format' as second argument");
+            return NanThrowError("Expected string 'format' as second argument");
         if (args.Length() < 3 || !args[2]->IsFunction())
-            NanThrowError("Expected callback function as third argument");
+            return NanThrowError("Expected callback function as third argument");
     }
     else {
-        NanThrowError("Expected string or buffer as first argument");
+        return NanThrowError("Expected string or buffer as first argument");
     }
 
 
@@ -259,15 +258,13 @@ NAN_METHOD(Tag::AsyncTag) {
     if (args[0]->IsString()) {
         String::Utf8Value path(args[0]->ToString());
         baton->path = strdup(*path);
-	baton->localCallback = Local<Function>::Cast(args[1]);
-        NanAssignPersistent(baton->callback, baton->localCallback);
+        NanAssignPersistent(baton->callback, Local<Function>::Cast(args[1]));
 
     }
     else {
         baton->format = NodeStringToTagLibString(args[1]->ToString());
         baton->stream = new BufferStream(args[0]->ToObject());
-	baton->localCallback = Local<Function>::Cast(args[2]);
-        NanAssignPersistent(baton->callback, baton->localCallback);
+        NanAssignPersistent(baton->callback, Local<Function>::Cast(args[2]));
     }
 
     uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagReadDo, (uv_after_work_cb)Tag::AsyncTagReadAfter);
@@ -304,15 +301,15 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
         error->Set(NanNew<String>("code"), NanNew<Integer>(baton->error));
         error->Set(NanNew<String>("message"), ErrorToString(baton->error));
         Handle<Value> argv[] = { error, NanNull() };
-        baton->localCallback->Call(NanGetCurrentContext()->Global(), 2, argv);
+        NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 2, argv);
     }
     else {
         Persistent<Object> inst;
-	Handle<Object> localInst = localTagTemplate->InstanceTemplate()->NewInstance();
+	Handle<Object> localInst = NanNew(TagTemplate)->InstanceTemplate()->NewInstance();
 	NanAssignPersistent(inst, localInst);
         baton->tag->Wrap(localInst);
         Handle<Value> argv[] = { NanNull(), localInst };
-        baton->localCallback->Call(NanGetCurrentContext()->Global(), 2, argv);
+        NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 2, argv);
     }
 
     NanDisposePersistent(baton->callback);
@@ -320,13 +317,13 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     delete baton;
 }
 
-NAN_METHOD(AsyncSaveTag) {
+NAN_METHOD(Tag::AsyncSaveTag) {
 //v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
     NanScope();
 //    HandleScope scope;
 
     if (args.Length() >= 1 && !args[0]->IsFunction())
-        NanThrowError("Expected callback function as first argument");
+        return NanThrowError("Expected callback function as first argument");
 
     Local<Function> callback = Local<Function>::Cast(args[0]);
 
@@ -360,11 +357,11 @@ void Tag::AsyncSaveTagAfter(uv_work_t *req) {
         error->Set(NanNew<String>("message"), NanNew<String>("Failed to save file"));
         error->Set(NanNew<String>("path"), NanNew<String>(baton->tag->fileRef->file()->name()));
         Handle<Value> argv[] = { error };
-        baton->localCallback->Call(NanGetCurrentContext()->Global(), 1, argv);
+        NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 1, argv);
     }
     else {
         Handle<Value> argv[] = { NanNull() };
-        baton->localCallback->Call(NanGetCurrentContext()->Global(), 1, argv);
+        NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 1, argv);
     }
 
     NanDisposePersistent(baton->callback);

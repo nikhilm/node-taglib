@@ -32,7 +32,6 @@ void AsyncReadFileAfter(uv_work_t *req);
 struct AsyncBaton {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
-    v8::Handle<v8::Function> localCallback;
     int error;
 
     TagLib::FileName path; /* only used by read/tag, not save */
@@ -60,7 +59,6 @@ struct AsyncResolverBaton {
 };
 
 class CallbackResolver : public TagLib::FileRef::FileTypeResolver {
-    v8::Handle<v8::Function> localResolverFunc;
     v8::Persistent<v8::Function> resolverFunc;
     const uv_thread_t created_in;
 
