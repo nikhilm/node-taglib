@@ -153,13 +153,10 @@ Handle<String> ErrorToString(int error) {
     }
 
     return NanEscapeScope(NanNew<String>(err.c_str(), err.length()));
-//    return scope.Close(String::New(err.c_str(), err.length()));
 }
 
 NAN_METHOD(AsyncReadFile) {
-//v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
-	NanScope();
-//    HandleScope scope;
+    NanScope();
 
 
     if (args.Length() < 1) {
@@ -191,15 +188,13 @@ NAN_METHOD(AsyncReadFile) {
     if (args[0]->IsString()) {
         String::Utf8Value path(args[0]->ToString());
         baton->path = strdup(*path);
-	NanAssignPersistent(baton->callback, Local<Function>::Cast(args[1]));
-//        baton->callback = Persistent<Function>::New(baton->localCallback);
+        NanAssignPersistent(baton->callback, Local<Function>::Cast(args[1]));
 
     }
     else {
         baton->format = NodeStringToTagLibString(args[1]->ToString());
         baton->stream = new BufferStream(args[0]->ToObject());
-	NanAssignPersistent(baton->callback, Local<Function>::Cast(args[2]));
-//        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+        NanAssignPersistent(baton->callback, Local<Function>::Cast(args[2]));
     }
 
     uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, (uv_after_work_cb)AsyncReadFileAfter);
@@ -293,7 +288,6 @@ TagLib::String NodeStringToTagLibString( Local<Value> s )
     }
 }
 
-//Handle<Value> AddResolvers(const Arguments &args)
 NAN_METHOD(AddResolvers)
 {
   NanScope();
@@ -334,7 +328,6 @@ void CallbackResolver::stopIdling(uv_async_t *handle)
 void CallbackResolver::invokeResolver(AsyncResolverBaton *baton)
 {
   NanScope();
-//    HandleScope scope;
     Handle<Value> argv[] = { TagLibStringToString(baton->fileName) };
     Local<Value> ret = NanNew(baton->resolver->resolverFunc)->Call(NanGetCurrentContext()->Global(), 1, argv);
     if (!ret->IsString()) {
@@ -381,7 +374,6 @@ static void
 init (Handle<Object> target)
 {
   NanScope();
-//    HandleScope scope;
 
 #ifdef TAGLIB_WITH_ASF
     target->Set(NanNew<String>("WITH_ASF"), NanTrue());

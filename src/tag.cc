@@ -18,12 +18,10 @@ static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
 {
-  NanScope();
-//    HandleScope scope;
+    NanScope();
 
-  Local<FunctionTemplate> localTagTemplate = NanNew<FunctionTemplate>();
-  NanAssignPersistent(TagTemplate, localTagTemplate);
-//    TagTemplate = Persistent<FunctionTemplate>::New(FunctionTemplate::New());
+    Local<FunctionTemplate> localTagTemplate = NanNew<FunctionTemplate>();
+    NanAssignPersistent(TagTemplate, localTagTemplate);
 
     localTagTemplate->InstanceTemplate()->SetInternalFieldCount(1);
     localTagTemplate->SetClassName(NanNew<String>("Tag"));
@@ -54,136 +52,93 @@ Tag::~Tag() {
     tag = NULL;
 }
 
-//inline Tag * unwrapTag(const AccessorInfo& info) {
-//  return ObjectWrap::Unwrap<Tag>(info.Holder());
-//}
-
 #define unwrapTag(info) ObjectWrap::Unwrap<Tag>(info.Holder())
 
 NAN_GETTER(Tag::GetTitle) {
     NanScope();
     NanReturnValue(TagLibStringToString(unwrapTag(args)->tag->title()));
-//Handle<Value> Tag::GetTitle(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->title()));
 }
 
 NAN_SETTER(Tag::SetTitle) {
     NanScope();
-//void Tag::SetTitle(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setTitle(NodeStringToTagLibString(value));
+    unwrapTag(args)->tag->setTitle(NodeStringToTagLibString(value));
 }
 
 NAN_GETTER(Tag::GetArtist) {
     NanScope();
     NanReturnValue(TagLibStringToString(unwrapTag(args)->tag->artist()));
-//Handle<Value> Tag::GetArtist(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->artist()));
 }
 
 NAN_SETTER(Tag::SetArtist) {
     NanScope();
-//void Tag::SetArtist(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setArtist(NodeStringToTagLibString(value));
+    unwrapTag(args)->tag->setArtist(NodeStringToTagLibString(value));
 }
 
 NAN_GETTER(Tag::GetAlbum) {
     NanScope();
     NanReturnValue(TagLibStringToString(unwrapTag(args)->tag->album()));
-//Handle<Value> Tag::GetAlbum(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->album()));
 }
 
 NAN_SETTER(Tag::SetAlbum) {
     NanScope();
-//void Tag::SetAlbum(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setAlbum(NodeStringToTagLibString(value));
+    unwrapTag(args)->tag->setAlbum(NodeStringToTagLibString(value));
 }
 
 NAN_GETTER(Tag::GetComment) {
     NanScope();
     NanReturnValue(TagLibStringToString(unwrapTag(args)->tag->comment()));
-//Handle<Value> Tag::GetComment(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->comment()));
 }
 
 NAN_SETTER(Tag::SetComment) {
     NanScope();
-//void Tag::SetComment(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setComment(NodeStringToTagLibString(value));
+    unwrapTag(args)->tag->setComment(NodeStringToTagLibString(value));
 }
 
 NAN_GETTER(Tag::GetTrack) {
     NanScope();
     NanReturnValue(NanNew<Integer>(unwrapTag(args)->tag->track()));
-//Handle<Value> Tag::GetTrack(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(Integer::New(unwrapTag(info)->tag->track()));
 }
 
 NAN_SETTER(Tag::SetTrack) {
     NanScope();
-//void Tag::SetTrack(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setTrack(value->IntegerValue());
+    unwrapTag(args)->tag->setTrack(value->IntegerValue());
 }
 
 NAN_GETTER(Tag::GetYear) {
     NanScope();
     NanReturnValue(NanNew<Integer>(unwrapTag(args)->tag->year()));
-//Handle<Value> Tag::GetYear(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(Integer::New(unwrapTag(info)->tag->year()));
 }
 
 NAN_SETTER(Tag::SetYear) {
     NanScope();
-//void Tag::SetYear(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setYear(value->IntegerValue());
+    unwrapTag(args)->tag->setYear(value->IntegerValue());
 }
 
 NAN_GETTER(Tag::GetGenre) {
     NanScope();
     NanReturnValue(TagLibStringToString(unwrapTag(args)->tag->genre()));
-//Handle<Value> Tag::GetGenre(Local<String> property, const AccessorInfo& info) {
-//  HandleScope scope;
-//  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->genre()));
 }
 
 NAN_SETTER(Tag::SetGenre) {
     NanScope();
-//void Tag::SetGenre(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-//  HandleScope scope;
-  unwrapTag(args)->tag->setGenre(NodeStringToTagLibString(value));
+    unwrapTag(args)->tag->setGenre(NodeStringToTagLibString(value));
 }
 
 NAN_METHOD(Tag::IsEmpty) {
     NanScope();
-//Handle<Value> Tag::IsEmpty(const Arguments &args) {
-//  HandleScope scope;
-  Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
-  NanReturnValue(NanNew<Boolean>(t->tag->isEmpty()));
+    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+    NanReturnValue(NanNew<Boolean>(t->tag->isEmpty()));
 }
 
 NAN_METHOD(Tag::SyncSaveTag) {
     NanScope();
-//Handle<Value> Tag::SyncSaveTag(const Arguments &args) {
-//  HandleScope scope;
-  Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
-  assert(t->fileRef);
-  bool success = t->fileRef->save();
-  if (success)
-      NanReturnUndefined();
-  else
-      return NanThrowError(String::Concat(
+    Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
+    assert(t->fileRef);
+    bool success = t->fileRef->save();
+    if (success)
+        NanReturnUndefined();
+    else
+        return NanThrowError(String::Concat(
                 NanNew<String>("Failed to save file: "),
                 NanNew<String>(t->fileRef->file()->name())
             ));
@@ -191,8 +146,6 @@ NAN_METHOD(Tag::SyncSaveTag) {
 
 NAN_METHOD(Tag::SyncTag) {
     NanScope();
-//Handle<Value> Tag::SyncTag(const Arguments &args) {
-//    HandleScope scope;
 
     TagLib::FileRef *f = 0;
     int error = 0;
@@ -221,13 +174,10 @@ NAN_METHOD(Tag::SyncTag) {
     tag->Wrap(inst);
 
     NanReturnValue(inst);
-//    return scope.Close(inst);
 }
 
 NAN_METHOD(Tag::AsyncTag) {
     NanScope();
-//v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
-//    HandleScope scope;
 
     if (args.Length() < 1) {
         return NanThrowError("Expected string or buffer as first argument");
@@ -292,7 +242,6 @@ void Tag::AsyncTagReadDo(uv_work_t *req) {
 
 void Tag::AsyncTagReadAfter(uv_work_t *req) {
     NanScope();
-//    HandleScope scope;
 
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
@@ -305,8 +254,8 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     }
     else {
         Persistent<Object> inst;
-	Handle<Object> localInst = NanNew(TagTemplate)->InstanceTemplate()->NewInstance();
-	NanAssignPersistent(inst, localInst);
+        Handle<Object> localInst = NanNew(TagTemplate)->InstanceTemplate()->NewInstance();
+        NanAssignPersistent(inst, localInst);
         baton->tag->Wrap(localInst);
         Handle<Value> argv[] = { NanNull(), localInst };
         NanNew(baton->callback)->Call(NanGetCurrentContext()->Global(), 2, argv);
@@ -318,9 +267,7 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
 }
 
 NAN_METHOD(Tag::AsyncSaveTag) {
-//v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
     NanScope();
-//    HandleScope scope;
 
     if (args.Length() >= 1 && !args[0]->IsFunction())
         return NanThrowError("Expected callback function as first argument");
