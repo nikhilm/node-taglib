@@ -63,8 +63,8 @@ class CallbackResolver : public TagLib::FileRef::FileTypeResolver {
 public:
     CallbackResolver(v8::Handle<v8::Function> localFunc);
     TagLib::File *createFile(TagLib::FileName fileName, bool readAudioProperties, TagLib::AudioProperties::ReadStyle audioPropertiesStyle) const;
-    static void invokeResolverCb(uv_async_t *handle);
-    static void stopIdling(uv_async_t *handle);
+    static void invokeResolverCb(uv_async_t *handle, int status);
+    static void stopIdling(uv_async_t *handle, int status);
     static void invokeResolver(AsyncResolverBaton *baton);
 };
 

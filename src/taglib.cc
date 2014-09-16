@@ -312,7 +312,7 @@ CallbackResolver::CallbackResolver(Handle<Function> func)
   NanAssignPersistent(resolverFunc, func);
 }
 
-void CallbackResolver::invokeResolverCb(uv_async_t *handle)
+void CallbackResolver::invokeResolverCb(uv_async_t *handle, int status)
 {
     AsyncResolverBaton *baton = (AsyncResolverBaton *) handle->data;
     invokeResolver(baton);
@@ -320,7 +320,7 @@ void CallbackResolver::invokeResolverCb(uv_async_t *handle)
     uv_close((uv_handle_t*)&baton->request, 0);
 }
 
-void CallbackResolver::stopIdling(uv_async_t *handle)
+void CallbackResolver::stopIdling(uv_async_t *handle, int status)
 {
     uv_close((uv_handle_t*) handle, 0);
 }
@@ -351,9 +351,9 @@ TagLib::File *CallbackResolver::createFile(TagLib::FileName fileName, bool readA
     if (created_in != pthread_self()) {
 #endif
         uv_loop_t *wait_loop = uv_loop_new();
-        uv_async_init(wait_loop, &baton.idler, CallbackResolver::stopIdling);
+        uv_async_init(wait_loop, &baton.idler, (uv_async_cb) CallbackResolver::stopIdling);
 
-        uv_async_init(uv_default_loop(), &baton.request, invokeResolverCb);
+        uv_async_init(uv_default_loop(), &baton.request, (uv_async_cb) invokeResolverCb);
         uv_async_send(&baton.request);
         uv_run(wait_loop, UV_RUN_DEFAULT);
         uv_loop_delete(wait_loop);
