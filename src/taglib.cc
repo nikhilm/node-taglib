@@ -266,7 +266,7 @@ Handle<Value> TagLibStringToString( TagLib::String s )
 {
   NanEscapableScope();
     if(s.isEmpty()) {
-        return NanNull();
+        return NanEscapeScope(NanNull());
     }
     else {
         TagLib::ByteVector str = s.data(TagLib::String::UTF16);

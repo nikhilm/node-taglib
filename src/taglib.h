@@ -25,7 +25,6 @@ v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
 NAN_METHOD(AsyncReadFile);
-//v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args);
 void AsyncReadFileDo(uv_work_t *req);
 void AsyncReadFileAfter(uv_work_t *req);
 
@@ -46,7 +45,6 @@ struct AsyncBaton {
 };
 
 NAN_METHOD(AddResolvers);
-//v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);
 
 class CallbackResolver;
 
