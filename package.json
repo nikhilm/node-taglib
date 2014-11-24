@@ -1,7 +1,7 @@
 {
   "name": "taglib",
   "description": "Simple bindings to TagLib",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/nikhilm/node-taglib.git"
