@@ -4,7 +4,7 @@ node-taglib
 node-taglib is a simple binding to
 [TagLib](http://developer.kde.org/~wheeler/taglib/) in Javascript.
 
-It requires [node.js](http://nodejs.org).
+It requires [node.js](http://nodejs.org) and taglib header files (on Debian systems, install `libtag1-dev`).
 
 node-taglib offers only an abstract interface without giving access to extended
 file-specific attributes. It does allow custom resolvers though. Synchronous
@@ -17,26 +17,28 @@ certain bugs present in the released v1.7 cause problems.**
 
 ## Example
 
-    // load the library
-    var taglib = require('taglib');
+```js
+// load the library
+var taglib = require('taglib');
 
-    // asynchronous API
-    taglib.tag(path, function(err, tag) {
-        tag.artist; // => "Queen"
-        tag.title = "Erm";
-        tag.saveSync();
-    });
+// asynchronous API
+taglib.tag(path, function(err, tag) {
+    tag.artist; // => "Queen"
+    tag.title = "Erm";
+    tag.saveSync();
+});
 
-    // synchronous API
-    var tag = taglib.tagSync(path);
+// synchronous API
+var tag = taglib.tagSync(path);
 
-    tag.title; // => "Another one bites the dust"
-    tag.artist; // => "Kween"
-    tag.artist = "Queen";
+tag.title; // => "Another one bites the dust"
+tag.artist; // => "Kween"
+tag.artist = "Queen";
 
-    tag.isEmpty(); // => false
+tag.isEmpty(); // => false
 
-    tag.saveSync(); // => true
+tag.saveSync(); // => true
+```
 
 ## Installation
 
