@@ -3,6 +3,8 @@
 
 #include <fileref.h>
 #include <node.h>
+#include <uv.h>
+#include <node_object_wrap.h>
 #include <sys/time.h>
 
 namespace node_taglib {
@@ -17,32 +19,32 @@ class Tag : public node::ObjectWrap {
     Tag(TagLib::FileRef * fileRef);
     ~Tag();
 
-    static v8::Handle<v8::Value> GetTitle(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetTitle(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetTitle(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info);
+    static void SetTitle(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> GetArtist(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetArtist(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetArtist(v8::Local< v8::String > property, const v8::PropertyCallbackInfo< v8::Value >& info);
+    static void SetArtist(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> GetAlbum(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetAlbum(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetAlbum(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info);
+    static void SetAlbum(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> GetYear(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetYear(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetYear(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info);
+    static void SetYear(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> GetComment(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetComment(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetComment(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info);
+    static void SetComment(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> GetTrack(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetTrack(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetTrack(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info);
+    static void SetTrack(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> GetGenre(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetGenre(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+    static void GetGenre(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& info);
+    static void SetGenre(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    static v8::Handle<v8::Value> IsEmpty(const v8::Arguments &args);
-    static v8::Handle<v8::Value> AsyncSaveTag(const v8::Arguments &args);
-    static v8::Handle<v8::Value> SyncSaveTag(const v8::Arguments &args);
-    static v8::Handle<v8::Value> SyncTag(const v8::Arguments &args);
-    static v8::Handle<v8::Value> AsyncTag(const v8::Arguments &args);
+    void IsEmpty(const v8::FunctionCallbackInfo< v8::Value >& args);
+    void AsyncSaveTag(const v8::FunctionCallbackInfo< v8::Value >& args);
+    void SyncSaveTag(const v8::FunctionCallbackInfo< v8::Value >& args);
+    void SyncTag(const v8::FunctionCallbackInfo< v8::Value >& args);
+    void AsyncTag(const v8::FunctionCallbackInfo< v8::Value >& args);
     static void AsyncTagReadDo(uv_work_t *req);
     static void AsyncTagReadAfter(uv_work_t *req);
     static void AsyncSaveTagDo(uv_work_t *req);

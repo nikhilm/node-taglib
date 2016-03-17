@@ -18,26 +18,27 @@ static Persistent<FunctionTemplate> TagTemplate;
 
 void Tag::Initialize(Handle<Object> target)
 {
-    HandleScope scope;
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
-    TagTemplate = Persistent<FunctionTemplate>::New(FunctionTemplate::New());
+    TagTemplate = Persistent<FunctionTemplate>(isolate, FunctionTemplate::New(isolate));
 
-    TagTemplate->InstanceTemplate()->SetInternalFieldCount(1);
-    TagTemplate->SetClassName(String::NewSymbol("Tag"));
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetInternalFieldCount(1);
+    TagTemplate.Get(isolate)->SetClassName(String::NewSymbol("Tag"));
 
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "save", AsyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "saveSync", SyncSaveTag);
     NODE_SET_PROTOTYPE_METHOD(TagTemplate, "isEmpty", IsEmpty);
 
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("comment"), GetComment, SetComment);
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("artist"), GetArtist, SetArtist);
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("track"), GetTrack, SetTrack);
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("year"), GetYear, SetYear);
-    TagTemplate->InstanceTemplate()->SetAccessor(String::New("genre"), GetGenre, SetGenre);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("title"), GetTitle, SetTitle);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("album"), GetAlbum, SetAlbum);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("comment"), GetComment, SetComment);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("artist"), GetArtist, SetArtist);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("track"), GetTrack, SetTrack);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("year"), GetYear, SetYear);
+    TagTemplate.Get(isolate)->InstanceTemplate()->SetAccessor(String::New("genre"), GetGenre, SetGenre);
 
-    target->Set(String::NewSymbol("Tag"), TagTemplate->GetFunction());
+    target->Set(String::NewSymbol("Tag"), TagTemplate.Get(isolate)->GetFunction());
     NODE_SET_METHOD(target, "tag", AsyncTag);
     NODE_SET_METHOD(target, "tagSync", SyncTag);
 }
@@ -51,102 +52,116 @@ Tag::~Tag() {
     tag = NULL;
 }
 
-inline Tag * unwrapTag(const AccessorInfo& info) {
+inline Tag * unwrapTag(const PropertyCallbackInfo<Value>& info) {
   return ObjectWrap::Unwrap<Tag>(info.Holder());
 }
 
-Handle<Value> Tag::GetTitle(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->title()));
+void Tag::GetTitle(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  info.GetReturnValue().Set(TagLibStringToString(unwrapTag(info)->tag->title()));
 }
 
-void Tag::SetTitle(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetTitle(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setTitle(NodeStringToTagLibString(value));
 }
-
-Handle<Value> Tag::GetArtist(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->artist()));
+void Tag::GetArtist(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+  info.GetReturnValue().Set(TagLibStringToString(unwrapTag(info)->tag->artist()));
 }
 
-void Tag::SetArtist(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetArtist(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setArtist(NodeStringToTagLibString(value));
 }
 
-Handle<Value> Tag::GetAlbum(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->album()));
+void Tag::GetAlbum(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+  info.GetReturnValue().Set(TagLibStringToString(unwrapTag(info)->tag->album()));
 }
 
-void Tag::SetAlbum(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetAlbum(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setAlbum(NodeStringToTagLibString(value));
 }
 
-Handle<Value> Tag::GetComment(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->comment()));
+void Tag::GetComment(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+  info.GetReturnValue().Set(TagLibStringToString(unwrapTag(info)->tag->comment()));
 }
 
-void Tag::SetComment(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetComment(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setComment(NodeStringToTagLibString(value));
 }
 
-Handle<Value> Tag::GetTrack(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(Integer::New(unwrapTag(info)->tag->track()));
+void Tag::GetTrack(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+  info.GetReturnValue().Set(Integer::New(unwrapTag(info)->tag->track()));
 }
 
-void Tag::SetTrack(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetTrack(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setTrack(value->IntegerValue());
 }
 
-Handle<Value> Tag::GetYear(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(Integer::New(unwrapTag(info)->tag->year()));
+void Tag::GetYear(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+  info.GetReturnValue().Set(Integer::New(unwrapTag(info)->tag->year()));
 }
 
-void Tag::SetYear(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetYear(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setYear(value->IntegerValue());
 }
 
-Handle<Value> Tag::GetGenre(Local<String> property, const AccessorInfo& info) {
-  HandleScope scope;
-  return scope.Close(TagLibStringToString(unwrapTag(info)->tag->genre()));
+void Tag::GetGenre(Local<String> property, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+  info.GetReturnValue().Set(TagLibStringToString(unwrapTag(info)->tag->genre()));
 }
 
-void Tag::SetGenre(Local<String> property, Local<Value> value, const AccessorInfo& info) {
-  HandleScope scope;
+void Tag::SetGenre(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& info) {
+  Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
   unwrapTag(info)->tag->setGenre(NodeStringToTagLibString(value));
 }
 
-Handle<Value> Tag::IsEmpty(const Arguments &args) {
-  HandleScope scope;
+void Tag::IsEmpty(const FunctionCallbackInfo<Value> &args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
   Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
-  return Boolean::New(t->tag->isEmpty());
+  args.GetReturnValue().Set(Boolean::New(t->tag->isEmpty()));
 }
 
-Handle<Value> Tag::SyncSaveTag(const Arguments &args) {
-  HandleScope scope;
+void Tag::SyncSaveTag(const FunctionCallbackInfo<Value> &args) {
+  Isolate* isolate = Isolate::GetCurrent();
+  HandleScope scope(isolate);
   Tag *t = ObjectWrap::Unwrap<Tag>(args.This());
   assert(t->fileRef);
   bool success = t->fileRef->save();
   if (success)
-      return Undefined();
+      args.GetReturnValue().SetUndefined();
   else
-      return ThrowException(String::Concat(
+      isolate->ThrowException(String::Concat(
                 String::New("Failed to save file: "),
                 String::New(t->fileRef->file()->name())
             ));
 }
 
-Handle<Value> Tag::SyncTag(const Arguments &args) {
-    HandleScope scope;
+void Tag::SyncTag(const FunctionCallbackInfo<Value> &args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     TagLib::FileRef *f = 0;
     int error = 0;
@@ -155,48 +170,60 @@ Handle<Value> Tag::SyncTag(const Arguments &args) {
         String::Utf8Value path(args[0]->ToString());
         if ((error = CreateFileRefPath(*path, &f))) {
             Local<String> fn = String::Concat(args[0]->ToString(), Local<String>::Cast(String::New(": ", -1)));
-            return ThrowException(String::Concat(fn, ErrorToString(error)));
+            isolate->ThrowException(String::Concat(fn, ErrorToString(error)));
+            return;
         }
     }
     else if (args.Length() >= 1 && Buffer::HasInstance(args[0])) {
-        if (args.Length() < 2 || !args[1]->IsString())
-            return ThrowException(String::New("Expected string 'format' as second argument"));
+        if (args.Length() < 2 || !args[1]->IsString()) {
+            isolate->ThrowException(String::New("Expected string 'format' as second argument"));
+            return;
+        }
 
         if ((error = CreateFileRef(new BufferStream(args[0]->ToObject()), NodeStringToTagLibString(args[1]->ToString()), &f))) {
-            return ThrowException(ErrorToString(error));
+            isolate->ThrowException(ErrorToString(error));
+            return;
         }
     }
     else {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        isolate->ThrowException(String::New("Expected string or buffer as first argument"));
+        return;
     }
 
     Tag * tag = new Tag(f);
     Handle<Object> inst = TagTemplate->InstanceTemplate()->NewInstance();
     tag->Wrap(inst);
 
-    return scope.Close(inst);
+    args.GetReturnValue().Set(inst);
 }
 
-v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
-    HandleScope scope;
+void Tag::AsyncTag(const FunctionCallbackInfo<Value> &args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+    
 
     if (args.Length() < 1) {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        isolate->ThrowException(String::New("Expected string or buffer as first argument"));
+        return;
     }
 
     if (args[0]->IsString()) {
-        if (args.Length() < 2 || !args[1]->IsFunction())
-            return ThrowException(String::New("Expected callback function as second argument"));
-
-    }
-    else if (Buffer::HasInstance(args[0])) {
-        if (args.Length() < 2 || !args[1]->IsString())
-            return ThrowException(String::New("Expected string 'format' as second argument"));
-        if (args.Length() < 3 || !args[2]->IsFunction())
-            return ThrowException(String::New("Expected callback function as third argument"));
-    }
-    else {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        if (args.Length() < 2 || !args[1]->IsFunction()) {
+            isolate->ThrowException(String::New("Expected callback function as second argument"));
+            return;
+        }
+    } else if (Buffer::HasInstance(args[0])) {
+        if (args.Length() < 2 || !args[1]->IsString()) {
+            isolate->ThrowException(String::New("Expected string 'format' as second argument"));
+            return;
+        }
+        if (args.Length() < 3 || !args[2]->IsFunction()) {
+            isolate->ThrowException(String::New("Expected callback function as third argument"));
+            return;
+        }
+    } else {
+        isolate->ThrowException(String::New("Expected string or buffer as first argument"));
+        return;
     }
 
 
@@ -220,7 +247,7 @@ v8::Handle<v8::Value> Tag::AsyncTag(const v8::Arguments &args) {
 
     uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncTagReadDo, (uv_after_work_cb)Tag::AsyncTagReadAfter);
 
-    return Undefined();
+    args.GetReturnValue().SetUndefined();
 }
 
 void Tag::AsyncTagReadDo(uv_work_t *req) {
@@ -242,7 +269,8 @@ void Tag::AsyncTagReadDo(uv_work_t *req) {
 }
 
 void Tag::AsyncTagReadAfter(uv_work_t *req) {
-    HandleScope scope;
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 
@@ -265,11 +293,14 @@ void Tag::AsyncTagReadAfter(uv_work_t *req) {
     delete baton;
 }
 
-v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
-    HandleScope scope;
+void Tag::AsyncSaveTag(const FunctionCallbackInfo<Value> &args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
-    if (args.Length() >= 1 && !args[0]->IsFunction())
-        return ThrowException(String::New("Expected callback function as first argument"));
+    if (args.Length() >= 1 && !args[0]->IsFunction()) {
+        isolate->ThrowException(String::New("Expected callback function as first argument"));
+        return;
+    }
 
     Local<Function> callback = Local<Function>::Cast(args[0]);
 
@@ -283,7 +314,7 @@ v8::Handle<v8::Value> Tag::AsyncSaveTag(const v8::Arguments &args) {
 
     uv_queue_work(uv_default_loop(), &baton->request, Tag::AsyncSaveTagDo, (uv_after_work_cb)Tag::AsyncSaveTagAfter);
 
-    return Undefined();
+    args.GetReturnValue().SetUndefined();
 }
 
 void Tag::AsyncSaveTagDo(uv_work_t *req) {
@@ -294,7 +325,8 @@ void Tag::AsyncSaveTagDo(uv_work_t *req) {
 }
 
 void Tag::AsyncSaveTagAfter(uv_work_t *req) {
-    HandleScope scope;
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
 

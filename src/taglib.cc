@@ -155,26 +155,34 @@ Handle<String> ErrorToString(int error) {
     return scope.Close(String::New(err.c_str(), err.length()));
 }
 
-v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
-    HandleScope scope;
+void AsyncReadFile(const FunctionCallbackInfo<Value> &args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     if (args.Length() < 1) {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        isolate->ThrowException(String::New("Expected string or buffer as first argument"));
+        return;
     }
 
     if (args[0]->IsString()) {
-        if (args.Length() < 2 || !args[1]->IsFunction())
-            return ThrowException(String::New("Expected callback function as second argument"));
-
+        if (args.Length() < 2 || !args[1]->IsFunction()) {
+            isolate->ThrowException(String::New("Expected callback function as second argument"));
+            return;
+        }
     }
     else if (Buffer::HasInstance(args[0])) {
-        if (args.Length() < 2 || !args[1]->IsString())
-            return ThrowException(String::New("Expected string 'format' as second argument"));
-        if (args.Length() < 3 || !args[2]->IsFunction())
-            return ThrowException(String::New("Expected callback function as third argument"));
+        if (args.Length() < 2 || !args[1]->IsString()) {
+            isolate->ThrowException(String::New("Expected string 'format' as second argument"));
+            return;
+        }
+        if (args.Length() < 3 || !args[2]->IsFunction()) {
+            isolate->ThrowException(String::New("Expected callback function as third argument"));
+            return;
+        }
     }
     else {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        isolate->ThrowException(String::New("Expected string or buffer as first argument"));
+        return;
     }
 
     AsyncBaton *baton = new AsyncBaton;
@@ -198,7 +206,7 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
 
     uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, (uv_after_work_cb)AsyncReadFileAfter);
 
-    return Undefined();
+    args.GetReturnValue().SetUndefined();
 }
 
 void AsyncReadFileDo(uv_work_t *req) {
@@ -284,7 +292,7 @@ TagLib::String NodeStringToTagLibString( Local<Value> s )
     }
 }
 
-Handle<Value> AddResolvers(const Arguments &args)
+void AddResolvers(const FunctionCallbackInfo<Value> &args)
 {
     for (int i = 0; i < args.Length(); i++) {
         Local<Value> arg = args[i];
@@ -293,7 +301,7 @@ Handle<Value> AddResolvers(const Arguments &args)
             TagLib::FileRef::addFileTypeResolver(new CallbackResolver(resolver));
         }
     }
-    return Undefined();
+    args.getReturnValue().SetUndefined();
 }
 
 CallbackResolver::CallbackResolver(Persistent<Function> func)
