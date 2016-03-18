@@ -154,7 +154,7 @@ Local< String > ErrorToString(int error) {
     return Nan::New<String>(err).ToLocalChecked();
 }
 
-void AsyncReadFile(const Nan::FunctionCallbackInfo<Value> &args) {
+void AsyncReadFile(const Nan::FunctionCallbackInfo< v8::Value >& args) {
     Isolate* isolate = Isolate::GetCurrent();
     HandleScope scope(isolate);
 
@@ -379,20 +379,20 @@ init (Handle<Object> target)
     Nan::HandleScope scope;
 
 #ifdef TAGLIB_WITH_ASF
-    target->Set(Nan::New("WITH_ASF").ToLocalChecked(), Nan::True());
+    Nan::Set(target, Nan::New("WITH_ASF").ToLocalChecked(), Nan::True());
 #else
-    target->Set(Nan::New("WITH_ASF").ToLocalChecked(), Nan::False());
+    Nan::Set(target, Nan::New("WITH_ASF").ToLocalChecked(), Nan::False());
 #endif
 
 #ifdef TAGLIB_WITH_MP4
-    target->Set(Nan::New("WITH_MP4").ToLocalChecked(), Nan::True());
+    Nan::Set(target, Nan::New("WITH_MP4").ToLocalChecked(), Nan::True());
 #else
-    target->Set(Nan::New("WITH_MP4").ToLocalChecked(), Nan::False());
+    Nan::Set(target, Nan::New("WITH_MP4").ToLocalChecked(), Nan::False());
 #endif
 
-    NODE_SET_METHOD(target, "read", AsyncReadFile);
+    Nan::SetMethod(target, "read", AsyncReadFile);
 #ifdef ENABLE_RESOLVERS
-    NODE_SET_METHOD(target, "addResolvers", AddResolvers);
+    Nan::SetMethod(target, "addResolvers", AddResolvers);
 #endif
     Tag::Init(target);
 }

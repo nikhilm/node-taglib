@@ -25,7 +25,7 @@ TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
 v8::Local<v8::String> ErrorToString(int error);
 v8::Local<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
-void AsyncReadFile(const v8::FunctionCallbackInfo< v8::Value > &args);
+void AsyncReadFile(const Nan::FunctionCallbackInfo< v8::Value > &args);
 void AsyncReadFileDo(uv_work_t *req);
 void AsyncReadFileAfter(uv_work_t *req);
 
@@ -45,7 +45,7 @@ struct AsyncBaton {
     Tag *tag; /* only used by taglib.tag */
 };
 
-void AddResolvers(const v8::FunctionCallbackInfo< v8::Value >& args);
+void AddResolvers(const Nan::FunctionCallbackInfo< v8::Value >& args);
 
 class CallbackResolver;
 
