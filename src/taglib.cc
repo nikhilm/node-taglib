@@ -296,14 +296,14 @@ void AddResolvers(const Nan::FunctionCallbackInfo<Value> &args)
     for (int i = 0; i < args.Length(); i++) {
         Local<Value> arg = args[i];
         if (arg->IsFunction()) {
-            Nan::Persistent<Function> resolver(Local<Function>::Cast(arg));
+            Local<Function> resolver = Local<Function>::Cast(arg);
             TagLib::FileRef::addFileTypeResolver(new CallbackResolver(resolver));
         }
     }
     args.GetReturnValue().SetUndefined();
 }
 
-CallbackResolver::CallbackResolver(Nan::Persistent<Function> func)
+CallbackResolver::CallbackResolver(Local< Function > func)
     : TagLib::FileRef::FileTypeResolver()
     , resolverFunc(func)
     // the constructor is always called in the v8 thread
