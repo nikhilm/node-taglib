@@ -9,6 +9,8 @@
 
 #include <node_version.h>
 
+#include <nan.h>
+
 namespace node_taglib {
 class Tag;
 class BufferStream;
@@ -20,16 +22,16 @@ class BufferStream;
 int CreateFileRefPath(TagLib::FileName path, TagLib::FileRef **ref);
 int CreateFileRef(TagLib::IOStream *stream, TagLib::String format, TagLib::FileRef **ref);
 TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
-v8::Handle<v8::String> ErrorToString(int error);
-v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
+v8::Local<v8::String> ErrorToString(int error);
+v8::Local<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
-v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args);
+void AsyncReadFile(const Nan::FunctionCallbackInfo< v8::Value > &args);
 void AsyncReadFileDo(uv_work_t *req);
 void AsyncReadFileAfter(uv_work_t *req);
 
 struct AsyncBaton {
     uv_work_t request;
-    v8::Persistent<v8::Function> callback;
+    Nan::Persistent<v8::Function> callback;
     int error;
 
     TagLib::FileName path; /* only used by read/tag, not save */
@@ -43,7 +45,7 @@ struct AsyncBaton {
     Tag *tag; /* only used by taglib.tag */
 };
 
-v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);
+void AddResolvers(const Nan::FunctionCallbackInfo< v8::Value >& args);
 
 class CallbackResolver;
 
@@ -56,14 +58,14 @@ struct AsyncResolverBaton {
 };
 
 class CallbackResolver : public TagLib::FileRef::FileTypeResolver {
-    v8::Persistent<v8::Function> resolverFunc;
+    Nan::Persistent<v8::Function> resolverFunc;
     const uv_thread_t created_in;
 
 public:
-    CallbackResolver(v8::Persistent<v8::Function> func);
+    CallbackResolver(v8::Local<v8::Function> func);
     TagLib::File *createFile(TagLib::FileName fileName, bool readAudioProperties, TagLib::AudioProperties::ReadStyle audioPropertiesStyle) const;
-    static void invokeResolverCb(uv_async_t *handle, int status);
-    static void stopIdling(uv_async_t *handle, int status);
+    static void invokeResolverCb(uv_async_t *handle);
+    static void stopIdling(uv_async_t *handle);
     static void invokeResolver(AsyncResolverBaton *baton);
 };
 

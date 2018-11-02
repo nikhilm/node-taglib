@@ -130,8 +130,7 @@ TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format) {
     return file;
 }
 
-Handle<String> ErrorToString(int error) {
-    HandleScope scope;
+Local< String > ErrorToString(int error) {
     std::string err;
 
     switch (error) {
@@ -152,29 +151,37 @@ Handle<String> ErrorToString(int error) {
             break;
     }
 
-    return scope.Close(String::New(err.c_str(), err.length()));
+    return Nan::New<String>(err).ToLocalChecked();
 }
 
-v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
-    HandleScope scope;
+void AsyncReadFile(const Nan::FunctionCallbackInfo< v8::Value >& args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
 
     if (args.Length() < 1) {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        Nan::ThrowError("Expected string or buffer as first argument");
+        return;
     }
 
     if (args[0]->IsString()) {
-        if (args.Length() < 2 || !args[1]->IsFunction())
-            return ThrowException(String::New("Expected callback function as second argument"));
-
+        if (args.Length() < 2 || !args[1]->IsFunction()) {
+            Nan::ThrowError("Expected callback function as second argument");
+            return;
+        }
     }
     else if (Buffer::HasInstance(args[0])) {
-        if (args.Length() < 2 || !args[1]->IsString())
-            return ThrowException(String::New("Expected string 'format' as second argument"));
-        if (args.Length() < 3 || !args[2]->IsFunction())
-            return ThrowException(String::New("Expected callback function as third argument"));
+        if (args.Length() < 2 || !args[1]->IsString()) {
+            Nan::ThrowError("Expected string 'format' as second argument");
+            return;
+        }
+        if (args.Length() < 3 || !args[2]->IsFunction()) {
+            Nan::ThrowError("Expected callback function as third argument");
+            return;
+        }
     }
     else {
-        return ThrowException(String::New("Expected string or buffer as first argument"));
+        Nan::ThrowError("Expected string or buffer as first argument");
+        return;
     }
 
     AsyncBaton *baton = new AsyncBaton;
@@ -187,18 +194,18 @@ v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args) {
     if (args[0]->IsString()) {
         String::Utf8Value path(args[0]->ToString());
         baton->path = strdup(*path);
-        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+        baton->callback.Reset(Local<Function>::Cast(args[1]));
 
     }
     else {
         baton->format = NodeStringToTagLibString(args[1]->ToString());
         baton->stream = new BufferStream(args[0]->ToObject());
-        baton->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+        baton->callback.Reset(Local<Function>::Cast(args[2]));
     }
 
     uv_queue_work(uv_default_loop(), &baton->request, AsyncReadFileDo, (uv_after_work_cb)AsyncReadFileAfter);
 
-    return Undefined();
+    args.GetReturnValue().SetUndefined();
 }
 
 void AsyncReadFileDo(uv_work_t *req) {
@@ -222,37 +229,37 @@ void AsyncReadFileDo(uv_work_t *req) {
 void AsyncReadFileAfter(uv_work_t *req) {
     AsyncBaton *baton = static_cast<AsyncBaton*>(req->data);
     if (baton->error) {
-        Local<Object> error = Object::New();
-        error->Set(String::New("code"), Integer::New(baton->error));
-        error->Set(String::New("message"), ErrorToString(baton->error));
-        Handle<Value> argv[] = { error, Null(), Null() };
-        baton->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+        Local<Object> error = Nan::New<Object>();
+        error->Set(Nan::New("code").ToLocalChecked(), Nan::New(baton->error));
+        error->Set(Nan::New("message").ToLocalChecked(), ErrorToString(baton->error));
+        Handle<Value> argv[] = { error, Nan::Null(), Nan::Null() };
+        Nan::Call(Nan::New(baton->callback), Nan::GetCurrentContext()->Global(), 3, argv);
     }
     else {
         // read the data, put it in objects and delete the fileref
         TagLib::Tag *tag = baton->fileRef->tag();
-        Local<Object> tagObj = Object::New();
+        Local<Object> tagObj = Nan::New<Object>();
         if (!tag->isEmpty()) {
-            tagObj->Set(String::New("album"), TagLibStringToString(tag->album()));
-            tagObj->Set(String::New("artist"), TagLibStringToString(tag->artist()));
-            tagObj->Set(String::New("comment"), TagLibStringToString(tag->comment()));
-            tagObj->Set(String::New("genre"), TagLibStringToString(tag->genre()));
-            tagObj->Set(String::New("title"), TagLibStringToString(tag->title()));
-            tagObj->Set(String::New("track"), Integer::New(tag->track()));
-            tagObj->Set(String::New("year"), Integer::New(tag->year()));
+            tagObj->Set(Nan::New("album").ToLocalChecked(), TagLibStringToString(tag->album()));
+            tagObj->Set(Nan::New("artist").ToLocalChecked(), TagLibStringToString(tag->artist()));
+            tagObj->Set(Nan::New("comment").ToLocalChecked(), TagLibStringToString(tag->comment()));
+            tagObj->Set(Nan::New("genre").ToLocalChecked(), TagLibStringToString(tag->genre()));
+            tagObj->Set(Nan::New("title").ToLocalChecked(), TagLibStringToString(tag->title()));
+            tagObj->Set(Nan::New("track").ToLocalChecked(), Nan::New(tag->track()));
+            tagObj->Set(Nan::New("year").ToLocalChecked(), Nan::New(tag->year()));
         }
 
         TagLib::AudioProperties *props = baton->fileRef->audioProperties();
-        Local<Object> propsObj = Object::New();
+        Local<Object> propsObj = Nan::New<Object>();
         if (props) {
-            propsObj->Set(String::New("length"), Integer::New(props->length()));
-            propsObj->Set(String::New("bitrate"), Integer::New(props->bitrate()));
-            propsObj->Set(String::New("sampleRate"), Integer::New(props->sampleRate()));
-            propsObj->Set(String::New("channels"), Integer::New(props->channels()));
+            propsObj->Set(Nan::New("length").ToLocalChecked(), Nan::New(props->length()));
+            propsObj->Set(Nan::New("bitrate").ToLocalChecked(), Nan::New(props->bitrate()));
+            propsObj->Set(Nan::New("sampleRate").ToLocalChecked(), Nan::New(props->sampleRate()));
+            propsObj->Set(Nan::New("channels").ToLocalChecked(), Nan::New(props->channels()));
         }
 
-        Handle<Value> argv[] = { Null(), tagObj, propsObj };
-        baton->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+        Handle<Value> argv[] = { Nan::Null(), tagObj, propsObj };
+        Nan::Call(Nan::New(baton->callback), Nan::GetCurrentContext()->Global(), 3, argv);
 
         delete baton->fileRef;
         delete baton;
@@ -260,16 +267,16 @@ void AsyncReadFileAfter(uv_work_t *req) {
     }
 }
 
-Handle<Value> TagLibStringToString( TagLib::String s )
+Local< Value > TagLibStringToString( TagLib::String s )
 {
     if(s.isEmpty()) {
-        return Null();
+        return Nan::Null();
     }
     else {
         TagLib::ByteVector str = s.data(TagLib::String::UTF16);
         // Strip the Byte Order Mark of the input to avoid node adding a UTF-8
         // Byte Order Mark
-        return String::New((uint16_t *)str.mid(2,str.size()-2).data(), s.size());
+        return Nan::New<v8::String>((uint16_t *)str.mid(2,str.size()-2).data(), s.size()).ToLocalChecked();
     }
 }
 
@@ -284,19 +291,19 @@ TagLib::String NodeStringToTagLibString( Local<Value> s )
     }
 }
 
-Handle<Value> AddResolvers(const Arguments &args)
+void AddResolvers(const Nan::FunctionCallbackInfo<Value> &args)
 {
     for (int i = 0; i < args.Length(); i++) {
         Local<Value> arg = args[i];
         if (arg->IsFunction()) {
-            Persistent<Function> resolver = Persistent<Function>::New(Local<Function>::Cast(arg));
+            Local<Function> resolver = Local<Function>::Cast(arg);
             TagLib::FileRef::addFileTypeResolver(new CallbackResolver(resolver));
         }
     }
-    return Undefined();
+    args.GetReturnValue().SetUndefined();
 }
 
-CallbackResolver::CallbackResolver(Persistent<Function> func)
+CallbackResolver::CallbackResolver(Local< Function > func)
     : TagLib::FileRef::FileTypeResolver()
     , resolverFunc(func)
     // the constructor is always called in the v8 thread
@@ -308,7 +315,7 @@ CallbackResolver::CallbackResolver(Persistent<Function> func)
 {
 }
 
-void CallbackResolver::invokeResolverCb(uv_async_t *handle, int status)
+void CallbackResolver::invokeResolverCb(uv_async_t *handle)
 {
     AsyncResolverBaton *baton = (AsyncResolverBaton *) handle->data;
     invokeResolver(baton);
@@ -316,16 +323,16 @@ void CallbackResolver::invokeResolverCb(uv_async_t *handle, int status)
     uv_close((uv_handle_t*)&baton->request, 0);
 }
 
-void CallbackResolver::stopIdling(uv_async_t *handle, int status)
+void CallbackResolver::stopIdling(uv_async_t *handle)
 {
     uv_close((uv_handle_t*) handle, 0);
 }
 
 void CallbackResolver::invokeResolver(AsyncResolverBaton *baton)
 {
-    HandleScope scope;
+    Nan::HandleScope scope;
     Handle<Value> argv[] = { TagLibStringToString(baton->fileName) };
-    Local<Value> ret = baton->resolver->resolverFunc->Call(Context::GetCurrent()->Global(), 1, argv);
+    Local<Value> ret = Nan::Call(Nan::New(baton->resolver->resolverFunc), Nan::GetCurrentContext()->Global(), 1, argv).ToLocalChecked();
     if (!ret->IsString()) {
         baton->type = TagLib::String::null;
     }
@@ -369,25 +376,25 @@ extern "C" {
 static void
 init (Handle<Object> target)
 {
-    HandleScope scope;
+    Nan::HandleScope scope;
 
 #ifdef TAGLIB_WITH_ASF
-    target->Set(String::NewSymbol("WITH_ASF"), v8::True());
+    Nan::Set(target, Nan::New("WITH_ASF").ToLocalChecked(), Nan::True());
 #else
-    target->Set(String::NewSymbol("WITH_ASF"), v8::False());
+    Nan::Set(target, Nan::New("WITH_ASF").ToLocalChecked(), Nan::False());
 #endif
 
 #ifdef TAGLIB_WITH_MP4
-    target->Set(String::NewSymbol("WITH_MP4"), v8::True());
+    Nan::Set(target, Nan::New("WITH_MP4").ToLocalChecked(), Nan::True());
 #else
-    target->Set(String::NewSymbol("WITH_MP4"), v8::False());
+    Nan::Set(target, Nan::New("WITH_MP4").ToLocalChecked(), Nan::False());
 #endif
 
-    NODE_SET_METHOD(target, "read", AsyncReadFile);
+    Nan::SetMethod(target, "read", AsyncReadFile);
 #ifdef ENABLE_RESOLVERS
-    NODE_SET_METHOD(target, "addResolvers", AddResolvers);
+    Nan::SetMethod(target, "addResolvers", AddResolvers);
 #endif
-    Tag::Initialize(target);
+    Tag::Init(target);
 }
 
 NODE_MODULE(taglib, init)
