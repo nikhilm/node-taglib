@@ -1,6 +1,5 @@
 node-taglib
 ===========
-
 node-taglib is a simple binding to
 [TagLib](http://developer.kde.org/~wheeler/taglib/) in Javascript.
 
@@ -16,7 +15,6 @@ certain bugs present in the released v1.7 cause problems.**
 [taglib-git]: https://github.com/taglib/taglib
 
 ## Example
-
 ```js
 // load the library
 var taglib = require('taglib');
@@ -39,9 +37,7 @@ tag.isEmpty(); // => false
 
 tag.saveSync(); // => true
 ```
-
 ## Installation
-
 ### via npm (Recommended)
 
     npm install taglib
@@ -58,7 +54,6 @@ tag.saveSync(); // => true
 The `examples` show usage.
 
 ## API
-
 ### read(path, callback)
 ### read(buffer, format, callback)
 
