@@ -5,3 +5,4 @@ spec/sample-write.mp3
 node_modules
 .DS_Store
 spec/sample-write-async.mp3
+*.swp

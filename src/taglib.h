@@ -6,6 +6,7 @@
 #include <node.h>
 #include <uv.h>
 #include <sys/time.h>
+#include <nan.h>
 
 #include <node_version.h>
 
@@ -23,7 +24,7 @@ TagLib::File *createFile(TagLib::IOStream *stream, TagLib::String format);
 v8::Handle<v8::String> ErrorToString(int error);
 v8::Handle<v8::Value> TagLibStringToString( TagLib::String s );
 TagLib::String NodeStringToTagLibString( v8::Local<v8::Value> s );
-v8::Handle<v8::Value> AsyncReadFile(const v8::Arguments &args);
+NAN_METHOD(AsyncReadFile);
 void AsyncReadFileDo(uv_work_t *req);
 void AsyncReadFileAfter(uv_work_t *req);
 
@@ -43,7 +44,7 @@ struct AsyncBaton {
     Tag *tag; /* only used by taglib.tag */
 };
 
-v8::Handle<v8::Value> AddResolvers(const v8::Arguments &args);
+NAN_METHOD(AddResolvers);
 
 class CallbackResolver;
 
@@ -60,7 +61,7 @@ class CallbackResolver : public TagLib::FileRef::FileTypeResolver {
     const uv_thread_t created_in;
 
 public:
-    CallbackResolver(v8::Persistent<v8::Function> func);
+    CallbackResolver(v8::Handle<v8::Function> localFunc);
     TagLib::File *createFile(TagLib::FileName fileName, bool readAudioProperties, TagLib::AudioProperties::ReadStyle audioPropertiesStyle) const;
     static void invokeResolverCb(uv_async_t *handle, int status);
     static void stopIdling(uv_async_t *handle, int status);

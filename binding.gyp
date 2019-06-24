@@ -4,6 +4,9 @@
       "target_name": "taglib",
       "sources": ["src/bufferstream.c", "src/tag.cc", "src/taglib.cc"],
       "libraries": ["<!(taglib-config --libs)"],
+	  "include_dirs" : [
+		  "<!(node -e \"require('nan')\")"
+	  ],
       'conditions': [
         ['OS=="mac"', {
           # cflags on OS X are stupid and have to be defined like this
